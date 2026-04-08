@@ -8,10 +8,11 @@ def main():
 
     # Uncomment the code below to pass the first stage
     #
-    server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
-    while v := server_socket.accept():  # wait for client
-        thread = threading.Thread(target=task, args=(v[0],))
-        thread.start()
+    with socket.create_server(("localhost", 6379), reuse_port=True) as server:
+        while True:  # wait for client
+            connection, _ = server.accept()
+            thread = threading.Thread(target=task, args=(connection,))
+            thread.start()
 
 
 def task(connection):  # listen for connections
