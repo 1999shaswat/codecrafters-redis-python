@@ -9,11 +9,12 @@ def main():
     # Uncomment the code below to pass the first stage
     #
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
-    thread = threading.Thread(target=task, args=(server_socket,))
+    while v := server_socket.accept():  # wait for client
+        thread = threading.Thread(target=task, args=(v[0],))
+        thread.start()
 
 
-def task(server_socket):  # listen for connections
-    connection, _ = server_socket.accept()  # wait for client
+def task(connection):  # listen for connections
     while data := connection.recv(1024):
         connection.sendall(b"+PONG\r\n")
     connection.close()
