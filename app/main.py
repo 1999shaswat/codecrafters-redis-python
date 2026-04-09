@@ -16,7 +16,7 @@ def main():
 
 
 def task(connection):  # listen for connections
-    data = {}
+    keystore = {}
     while data := connection.recv(1024):
         array = respParse(data)
         command = array[0].upper()
@@ -25,15 +25,11 @@ def task(connection):  # listen for connections
         elif command == "ECHO":
             connection.sendall(respEncoder(array[1], 2))
         elif command == "SET":
-            print(array)
-            data[array[1]] = array[2]
+            keystore[array[1]] = array[2]
             connection.sendall(respEncoder("OK", 1))
         elif command == "GET":
-            val = data.get(array[1])
-            if val is None:
-                connection.sendall(respEncoder(None, -1))
-            else:
-                connection.sendall(respEncoder(val, 2))
+            val = keystore.get(array[1])
+            connection.sendall(respEncoder(val, 2))
     connection.close()
 
 
@@ -41,13 +37,15 @@ def respEncoder(item, type):
     if type == 1:  # simple strings
         return f"+{item}\r\n".encode()
     elif type == 2:  # bulk strings
+        if item is None:
+            return b"$-1\r\n"
         return f"${len(item)}\r\n{item}\r\n".encode()
     elif type == 3:  # bulk array
         res = f"*{len(item)}\r\n".encode()
         for each in item:
             res += respEncoder(each, 2)
         return res
-    return "-1\r\n".encode()
+    return "$-1\r\n".encode()
 
 
 def respParse(bytes):
