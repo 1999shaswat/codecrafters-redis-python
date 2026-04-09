@@ -17,6 +17,7 @@ def main():
 
 def task(connection):  # listen for connections
     keystore = {}
+    liststore = []
     while data := connection.recv(1024):
         array = respParse(data)
         command = array[0].upper()
@@ -24,6 +25,11 @@ def task(connection):  # listen for connections
             connection.sendall(respEncoder("PONG", 1))
         elif command == "ECHO":
             connection.sendall(respEncoder(array[1], 2))
+        elif command == "RPUSH":
+            # what to do with list_key (RPUSH list_key "foo")
+            print(array[2])
+            liststore.append(array[2])
+            connection.sendall(respEncoder(len(liststore), 4))
         elif command == "SET":
             keystore[array[1]] = array[2]
             if len(array) == 5:
@@ -54,6 +60,9 @@ def respEncoder(item, type):
         for each in item:
             res += respEncoder(each, 2)
         return res
+    elif type == 4:  # Integer
+        # :[<+|->]<value>\r\n
+        return f":{item}\r\n".encode()
     return "$-1\r\n".encode()
 
 
