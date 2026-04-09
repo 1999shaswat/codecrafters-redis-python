@@ -16,8 +16,8 @@ def main():
 
 
 def task(connection):  # listen for connections
-    keystore = {}
-    liststore = []
+    datastore = {}
+    # liststore = []
     while data := connection.recv(1024):
         array = respParse(data)
         command = array[0].upper()
@@ -26,22 +26,31 @@ def task(connection):  # listen for connections
         elif command == "ECHO":
             connection.sendall(respEncoder(array[1], 2))
         elif command == "SET":
-            keystore[array[1]] = array[2]
+            datastore[array[1]] = array[2]
             if len(array) == 5:
                 time = int(array[4])
                 if array[3] == "PX":
                     time /= 1000
-                threading.Timer(time, deleteKey, args=(keystore, array[1])).start()
+                threading.Timer(time, deleteKey, args=(datastore, array[1])).start()
             connection.sendall(respEncoder("OK", 1))
         elif command == "GET":
-            val = keystore.get(array[1])
+            val = datastore.get(array[1])
             connection.sendall(respEncoder(val, 2))
         elif command == "RPUSH":
             # what to do with list_key (RPUSH list_key "foo")
+            list_key = array[1]
+            liststore = datastore.get(list_key)
+            if liststore is None:
+                liststore = []
             liststore.extend(array[2:])
+            datastore[list_key] = liststore
             connection.sendall(respEncoder(len(liststore), 4))
         elif command == "LRANGE":
             start, end = int(array[2]), int(array[3])
+            list_key = array[1]
+            liststore = datastore.get(list_key)
+            if liststore is None:
+                liststore = []
             connection.sendall(respEncoder(liststore[start : end + 1], 3))
 
     connection.close()
@@ -59,6 +68,8 @@ def respEncoder(item, type):
             return b"$-1\r\n"
         return f"${len(item)}\r\n{item}\r\n".encode()
     elif type == 3:  # bulk array
+        if item is None or len(item) == 0:
+            return b"*0\r\n"
         res = f"*{len(item)}\r\n".encode()
         for each in item:
             res += respEncoder(each, 2)
