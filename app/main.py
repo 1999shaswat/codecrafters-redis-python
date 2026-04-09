@@ -41,7 +41,7 @@ def task(connection):  # listen for connections
             liststore.extend(array[2:])
             connection.sendall(respEncoder(len(liststore), 4))
         elif command == "LRANGE":
-            start, end = int(array[3]), int(array[4])
+            start, end = int(array[2]), int(array[3])
             connection.sendall(respEncoder(liststore[start : end + 1], 3))
 
     connection.close()
