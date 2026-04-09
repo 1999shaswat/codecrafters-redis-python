@@ -28,7 +28,7 @@ def task(connection):  # listen for connections
         elif command == "RPUSH":
             # what to do with list_key (RPUSH list_key "foo")
             print(array[2])
-            liststore.append(array[2])
+            liststore.extend(array[2:])
             connection.sendall(respEncoder(len(liststore), 4))
         elif command == "SET":
             keystore[array[1]] = array[2]
