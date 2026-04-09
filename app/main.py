@@ -26,11 +26,22 @@ def task(connection):  # listen for connections
             connection.sendall(respEncoder(array[1], 2))
         elif command == "SET":
             keystore[array[1]] = array[2]
+            if len(array) == 5:
+                if array[3] == "EX":
+                    threading.Timer(array[4], deleteKey, args=(keystore, array[1]))
+                elif array[3] == "PX":
+                    threading.Timer(
+                        array[4] / 1000, deleteKey, args=(keystore, array[1])
+                    )
             connection.sendall(respEncoder("OK", 1))
         elif command == "GET":
             val = keystore.get(array[1])
             connection.sendall(respEncoder(val, 2))
     connection.close()
+
+
+def deleteKey(keystore, key):
+    del keystore[key]
 
 
 def respEncoder(item, type):
