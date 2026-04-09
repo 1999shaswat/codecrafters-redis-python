@@ -38,6 +38,10 @@ def task(connection):  # listen for connections
         elif command == "GET":
             val = datastore.get(array[1])
             connection.sendall(respEncoder(val, 2))
+        elif command == "LLEN":
+            list_key = array[1]
+            dq = datastore.get(list_key, deque([]))
+            connection.sendall(respEncoder(len(dq), 4))
         elif command == "RPUSH":
             # what to do with list_key (RPUSH list_key "foo")
             list_key = array[1]
