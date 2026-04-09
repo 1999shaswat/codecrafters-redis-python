@@ -51,6 +51,7 @@ def task(connection):  # listen for connections
                 start = max(len(liststore) - start, 0)
             if end < 0:
                 end = max(len(liststore) - end, 0)
+            print(start, end)
             connection.sendall(respEncoder(liststore[start : end + 1], 3))
 
     connection.close()
