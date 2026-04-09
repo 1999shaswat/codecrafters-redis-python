@@ -39,18 +39,18 @@ def task(connection):  # listen for connections
         elif command == "RPUSH":
             # what to do with list_key (RPUSH list_key "foo")
             list_key = array[1]
-            liststore = datastore.get(list_key)
-            if liststore is None:
-                liststore = []
+            liststore = datastore.get(list_key, [])
             liststore.extend(array[2:])
             datastore[list_key] = liststore
             connection.sendall(respEncoder(len(liststore), 4))
         elif command == "LRANGE":
             start, end = int(array[2]), int(array[3])
             list_key = array[1]
-            liststore = datastore.get(list_key)
-            if liststore is None:
-                liststore = []
+            liststore = datastore.get(list_key, [])
+            if start < 0:
+                start = max(len(liststore) - start, 0)
+            if end < 0:
+                end = max(len(liststore) - end, 0)
             connection.sendall(respEncoder(liststore[start : end + 1], 3))
 
     connection.close()
