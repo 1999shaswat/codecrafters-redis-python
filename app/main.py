@@ -28,10 +28,9 @@ def task(connection):  # listen for connections
             keystore[array[1]] = array[2]
             if len(array) == 5:
                 time = int(array[4])
-                if array[3] == "EX":
-                    threading.Timer(time, deleteKey, args=(keystore, array[1])).start()
-                elif array[3] == "PX":
-                    threading.Timer(time, deleteKey, args=(keystore, array[1])).start()
+                if array[3] == "PX":
+                    time /= 1000
+                threading.Timer(time, deleteKey, args=(keystore, array[1])).start()
             connection.sendall(respEncoder("OK", 1))
         elif command == "GET":
             val = keystore.get(array[1])
