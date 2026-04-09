@@ -48,10 +48,10 @@ def task(connection):  # listen for connections
             list_key = array[1]
             liststore = datastore.get(list_key, [])
             if start < 0:
-                start = max(len(liststore) - start, 0)
+                start = max(len(liststore) + start, 0)
             if end < 0:
-                end = max(len(liststore) - end, 0)
-            print(start, end)
+                end = max(len(liststore) + end, 0)
+            # print(start, end)
             connection.sendall(respEncoder(liststore[start : end + 1], 3))
 
     connection.close()
