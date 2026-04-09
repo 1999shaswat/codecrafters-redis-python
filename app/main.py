@@ -27,12 +27,11 @@ def task(connection):  # listen for connections
         elif command == "SET":
             keystore[array[1]] = array[2]
             if len(array) == 5:
+                time = int(array[4])
                 if array[3] == "EX":
-                    threading.Timer(array[4], deleteKey, args=(keystore, array[1]))
+                    threading.Timer(time, deleteKey, args=(keystore, array[1]))
                 elif array[3] == "PX":
-                    threading.Timer(
-                        array[4] / 1000, deleteKey, args=(keystore, array[1])
-                    )
+                    threading.Timer(time, deleteKey, args=(keystore, array[1]))
             connection.sendall(respEncoder("OK", 1))
         elif command == "GET":
             val = keystore.get(array[1])
