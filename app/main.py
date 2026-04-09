@@ -25,13 +25,15 @@ def task(connection):  # listen for connections
         elif command == "ECHO":
             connection.sendall(respEncoder(array[1], 2))
         elif command == "SET":
+            print(array)
             data[array[1]] = array[2]
             connection.sendall(respEncoder("OK", 1))
         elif command == "GET":
             val = data.get(array[1])
             if val is None:
                 connection.sendall(respEncoder(None, -1))
-            connection.sendall(respEncoder(val, 2))
+            else:
+                connection.sendall(respEncoder(val, 2))
     connection.close()
 
 
