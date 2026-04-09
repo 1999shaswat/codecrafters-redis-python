@@ -25,11 +25,6 @@ def task(connection):  # listen for connections
             connection.sendall(respEncoder("PONG", 1))
         elif command == "ECHO":
             connection.sendall(respEncoder(array[1], 2))
-        elif command == "RPUSH":
-            # what to do with list_key (RPUSH list_key "foo")
-            print(array[2])
-            liststore.extend(array[2:])
-            connection.sendall(respEncoder(len(liststore), 4))
         elif command == "SET":
             keystore[array[1]] = array[2]
             if len(array) == 5:
@@ -41,6 +36,14 @@ def task(connection):  # listen for connections
         elif command == "GET":
             val = keystore.get(array[1])
             connection.sendall(respEncoder(val, 2))
+        elif command == "RPUSH":
+            # what to do with list_key (RPUSH list_key "foo")
+            liststore.extend(array[2:])
+            connection.sendall(respEncoder(len(liststore), 4))
+        elif command == "LRANGE":
+            start, end = int(array[3]), int(array[4])
+            connection.sendall(respEncoder(liststore[start : end + 1], 3))
+
     connection.close()
 
 
