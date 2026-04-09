@@ -1,5 +1,7 @@
 import socket  # noqa: F401
 import threading
+from collections import deque
+from itertools import islice
 
 
 def main():
@@ -39,20 +41,27 @@ def task(connection):  # listen for connections
         elif command == "RPUSH":
             # what to do with list_key (RPUSH list_key "foo")
             list_key = array[1]
-            liststore = datastore.get(list_key, [])
-            liststore.extend(array[2:])
-            datastore[list_key] = liststore
-            connection.sendall(respEncoder(len(liststore), 4))
+            dq = datastore.get(list_key, deque([]))
+            dq.extend(array[2:])
+            datastore[list_key] = dq
+            connection.sendall(respEncoder(len(dq), 4))
+        elif command == "LPUSH":
+            # what to do with list_key (RPUSH list_key "foo")
+            list_key = array[1]
+            dq = datastore.get(list_key, deque([]))
+            dq.extendleft(array[2:])
+            datastore[list_key] = dq
+            connection.sendall(respEncoder(len(dq), 4))
         elif command == "LRANGE":
             start, end = int(array[2]), int(array[3])
             list_key = array[1]
-            liststore = datastore.get(list_key, [])
+            dq = datastore.get(list_key, deque([]))
             if start < 0:
-                start = max(len(liststore) + start, 0)
+                start = max(len(dq) + start, 0)
             if end < 0:
-                end = max(len(liststore) + end, 0)
+                end = max(len(dq) + end, 0)
             # print(start, end)
-            connection.sendall(respEncoder(liststore[start : end + 1], 3))
+            connection.sendall(respEncoder(list(islice(dq, start, end + 1)), 3))
 
     connection.close()
 
