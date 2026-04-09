@@ -16,12 +16,22 @@ def main():
 
 
 def task(connection):  # listen for connections
+    data = {}
     while data := connection.recv(1024):
         array = respParse(data)
-        if array[0] == "PING":
+        command = array[0].upper()
+        if command == "PING":
             connection.sendall(respEncoder("PONG", 1))
-        elif array[0] == "ECHO":
+        elif command == "ECHO":
             connection.sendall(respEncoder(array[1], 2))
+        elif command == "SET":
+            data[array[1]] = array[2]
+            connection.sendall(respEncoder("OK", 1))
+        elif command == "GET":
+            val = data.get(array[1])
+            if val is None:
+                connection.sendall(respEncoder(None, -1))
+            connection.sendall(respEncoder(val, 2))
     connection.close()
 
 
@@ -35,7 +45,7 @@ def respEncoder(item, type):
         for each in item:
             res += respEncoder(each, 2)
         return res
-    return b""
+    return "-1\r\n".encode()
 
 
 def respParse(bytes):
