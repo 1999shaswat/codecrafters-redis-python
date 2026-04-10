@@ -82,12 +82,14 @@ def task(connection):  # listen for connections
 
             dq = datastore.get(list_key, deque([]))
             popitems = ""
+            print(dq)
             if dq:
                 if popn >= len(dq):
                     popitems = list(dq)
                     dq.clear()
                 else:
                     popitems = [dq.popleft() for _ in range(popn)]
+            print(dq)
             print(popitems, type(popitems), popn)
             if ret_arr:
                 connection.sendall(respEncoder(popitems, BARR))
