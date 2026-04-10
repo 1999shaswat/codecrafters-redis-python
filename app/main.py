@@ -53,14 +53,14 @@ def task(connection):  # listen for connections
             list_key = fcommand[1]
             dq = datastore.get(list_key, deque([]))
             dq.extend(fcommand[2:])
-            # datastore[list_key] = dq
+            datastore[list_key] = dq
             connection.sendall(respEncoder(len(dq), INTR))
         elif command == "LPUSH":
             # what to do with list_key (RPUSH list_key "foo")
             list_key = fcommand[1]
             dq = datastore.get(list_key, deque([]))
             dq.extendleft(fcommand[2:])
-            # datastore[list_key] = dq
+            datastore[list_key] = dq
             connection.sendall(respEncoder(len(dq), INTR))
         elif command == "LRANGE":
             start, end = int(fcommand[2]), int(fcommand[3])
@@ -82,15 +82,15 @@ def task(connection):  # listen for connections
 
             dq = datastore.get(list_key, deque([]))
             popitems = ""
-            print(dq)
+            # print(dq)
             if dq:
                 if popn >= len(dq):
                     popitems = list(dq)
                     dq.clear()
                 else:
                     popitems = [dq.popleft() for _ in range(popn)]
-            print(dq)
-            print(popitems, type(popitems), popn)
+            # print(dq)
+            # print(popitems, type(popitems), popn)
             if ret_arr:
                 connection.sendall(respEncoder(popitems, BARR))
             else:
