@@ -81,13 +81,14 @@ def task(connection):  # listen for connections
             popitems = ""
             if dq:
                 if popn >= len(dq):
+                    popitems = list(dq)
                     dq.clear()
                 else:
                     popitems = [dq.popleft() for _ in range(popn)]
             if popn == 1:
                 connection.sendall(respEncoder(popitems[0], 2), BSTR)
             else:
-                connection.sendall(respEncoder(popitems, 3), BSTR)
+                connection.sendall(respEncoder(popitems, 3), BARR)
 
     connection.close()
 
