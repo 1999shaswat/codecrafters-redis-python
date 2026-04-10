@@ -3,6 +3,12 @@ import threading
 from collections import deque
 from itertools import islice
 
+# Deque Data Types
+SSTR = 1
+BSTR = 2
+BARR = 3
+INTR = 4
+
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -24,38 +30,38 @@ def task(connection):  # listen for connections
         array = respParse(data)
         command = array[0].upper()
         if command == "PING":
-            connection.sendall(respEncoder("PONG", 1))
+            connection.sendall(respEncoder("PONG", SSTR))
         elif command == "ECHO":
-            connection.sendall(respEncoder(array[1], 2))
+            connection.sendall(respEncoder(array[1], BSTR))
         elif command == "SET":
             datastore[array[1]] = array[2]
             if len(array) == 5:
                 time = int(array[4])
                 if array[3] == "PX":
                     time /= 1000
-                threading.Timer(time, deleteKey, args=(datastore, array[1])).start()
-            connection.sendall(respEncoder("OK", 1))
+                threading.Timer(time, deletekey, args=(datastore, array[1])).start()
+            connection.sendall(respEncoder("OK", SSTR))
         elif command == "GET":
             val = datastore.get(array[1])
-            connection.sendall(respEncoder(val, 2))
+            connection.sendall(respEncoder(val, BSTR))
         elif command == "LLEN":
             list_key = array[1]
             dq = datastore.get(list_key, deque([]))
-            connection.sendall(respEncoder(len(dq), 4))
+            connection.sendall(respEncoder(len(dq), INTR))
         elif command == "RPUSH":
             # what to do with list_key (RPUSH list_key "foo")
             list_key = array[1]
             dq = datastore.get(list_key, deque([]))
             dq.extend(array[2:])
             datastore[list_key] = dq
-            connection.sendall(respEncoder(len(dq), 4))
+            connection.sendall(respEncoder(len(dq), INTR))
         elif command == "LPUSH":
             # what to do with list_key (RPUSH list_key "foo")
             list_key = array[1]
             dq = datastore.get(list_key, deque([]))
             dq.extendleft(array[2:])
             datastore[list_key] = dq
-            connection.sendall(respEncoder(len(dq), 4))
+            connection.sendall(respEncoder(len(dq), INTR))
         elif command == "LRANGE":
             start, end = int(array[2]), int(array[3])
             list_key = array[1]
@@ -65,12 +71,19 @@ def task(connection):  # listen for connections
             if end < 0:
                 end = max(len(dq) + end, 0)
             # print(start, end)
-            connection.sendall(respEncoder(list(islice(dq, start, end + 1)), 3))
+            connection.sendall(respEncoder(slice_dq(dq, start, end + 1), BARR))
+        elif command == "LPOP":
+            list_key = array[1]
+            dq = datastore.get(list_key, deque([]))
+            val = ""
+            if dq:
+                val = dq.popleft()
+            connection.sendall(respEncoder(val, 2), BSTR)
 
     connection.close()
 
 
-def deleteKey(keystore, key):
+def deletekey(keystore, key):
     del keystore[key]
 
 
@@ -112,6 +125,13 @@ def parser(tlist):
             c += 2
         return res
     return []
+
+
+def slice_dq(d, start, stop):
+    d.rotate(-start)
+    slice = list(islice(d, 0, stop - start))
+    d.rotate(start)
+    return slice
 
 
 if __name__ == "__main__":
