@@ -27,44 +27,44 @@ def task(connection):  # listen for connections
     datastore = {}
     # liststore = []
     while data := connection.recv(1024):
-        array = respParse(data)
-        command = array[0].upper()
+        fcommand = respParse(data)
+        command = fcommand[0].upper()
         if command == "PING":
             connection.sendall(respEncoder("PONG", SSTR))
         elif command == "ECHO":
-            connection.sendall(respEncoder(array[1], BSTR))
+            connection.sendall(respEncoder(fcommand[1], BSTR))
         elif command == "SET":
-            datastore[array[1]] = array[2]
-            if len(array) == 5:
-                time = int(array[4])
-                if array[3] == "PX":
+            datastore[fcommand[1]] = fcommand[2]
+            if len(fcommand) == 5:
+                time = int(fcommand[4])
+                if fcommand[3] == "PX":
                     time /= 1000
-                threading.Timer(time, deletekey, args=(datastore, array[1])).start()
+                threading.Timer(time, deletekey, args=(datastore, fcommand[1])).start()
             connection.sendall(respEncoder("OK", SSTR))
         elif command == "GET":
-            val = datastore.get(array[1])
-            connection.sendall(respEncoder(val, BSTR))
+            popitems = datastore.get(fcommand[1])
+            connection.sendall(respEncoder(popitems, BSTR))
         elif command == "LLEN":
-            list_key = array[1]
+            list_key = fcommand[1]
             dq = datastore.get(list_key, deque([]))
             connection.sendall(respEncoder(len(dq), INTR))
         elif command == "RPUSH":
             # what to do with list_key (RPUSH list_key "foo")
-            list_key = array[1]
+            list_key = fcommand[1]
             dq = datastore.get(list_key, deque([]))
-            dq.extend(array[2:])
-            datastore[list_key] = dq
+            dq.extend(fcommand[2:])
+            # datastore[list_key] = dq
             connection.sendall(respEncoder(len(dq), INTR))
         elif command == "LPUSH":
             # what to do with list_key (RPUSH list_key "foo")
-            list_key = array[1]
+            list_key = fcommand[1]
             dq = datastore.get(list_key, deque([]))
-            dq.extendleft(array[2:])
-            datastore[list_key] = dq
+            dq.extendleft(fcommand[2:])
+            # datastore[list_key] = dq
             connection.sendall(respEncoder(len(dq), INTR))
         elif command == "LRANGE":
-            start, end = int(array[2]), int(array[3])
-            list_key = array[1]
+            start, end = int(fcommand[2]), int(fcommand[3])
+            list_key = fcommand[1]
             dq = datastore.get(list_key, deque([]))
             if start < 0:
                 start = max(len(dq) + start, 0)
@@ -73,12 +73,21 @@ def task(connection):  # listen for connections
             # print(start, end)
             connection.sendall(respEncoder(slice_dq(dq, start, end + 1), BARR))
         elif command == "LPOP":
-            list_key = array[1]
+            list_key = fcommand[1]
+            popn = 1
+            if len(fcommand) == 3:
+                popn = int(fcommand[2])
             dq = datastore.get(list_key, deque([]))
-            val = ""
+            popitems = ""
             if dq:
-                val = dq.popleft()
-            connection.sendall(respEncoder(val, 2), BSTR)
+                if popn >= len(dq):
+                    dq.clear()
+                else:
+                    popitems = [dq.popleft() for _ in range(popn)]
+            if popn == 1:
+                connection.sendall(respEncoder(popitems[0], 2), BSTR)
+            else:
+                connection.sendall(respEncoder(popitems, 3), BSTR)
 
     connection.close()
 
