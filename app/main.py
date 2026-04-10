@@ -79,6 +79,7 @@ def task(connection):  # listen for connections
             if len(fcommand) == 3:
                 ret_arr = True
                 popn = int(fcommand[2])
+
             dq = datastore.get(list_key, deque([]))
             popitems = ""
             if dq:
@@ -87,7 +88,7 @@ def task(connection):  # listen for connections
                     dq.clear()
                 else:
                     popitems = [dq.popleft() for _ in range(popn)]
-            print(popitems, type(type))
+            print(popitems, type(popitems), popn)
             if ret_arr:
                 connection.sendall(respEncoder(popitems, BARR))
             else:
