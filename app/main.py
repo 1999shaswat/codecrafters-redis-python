@@ -75,7 +75,9 @@ def task(connection):  # listen for connections
         elif command == "LPOP":
             list_key = fcommand[1]
             popn = 1
+            ret_arr = False
             if len(fcommand) == 3:
+                ret_arr = True
                 popn = int(fcommand[2])
             dq = datastore.get(list_key, deque([]))
             popitems = ""
@@ -85,10 +87,11 @@ def task(connection):  # listen for connections
                     dq.clear()
                 else:
                     popitems = [dq.popleft() for _ in range(popn)]
-            if popn == 1:
-                connection.sendall(respEncoder(popitems[0], 2), BSTR)
+            print(popitems, type(type))
+            if ret_arr:
+                connection.sendall(respEncoder(popitems, BARR))
             else:
-                connection.sendall(respEncoder(popitems, 3), BARR)
+                connection.sendall(respEncoder(popitems[0], BSTR))
 
     connection.close()
 
