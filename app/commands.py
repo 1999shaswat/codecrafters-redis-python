@@ -100,7 +100,7 @@ def cmd_blpop(connection, args, ctx):
     result = [args[1]]
     thread_id = threading.get_ident()
     waiter = {"q": deque([]), "e": threading.Event()}
-    timeout = int(args[2]) if len(args) == 3 else None
+    timeout = float(args[2]) if len(args) == 3 else None
     with lock:
         dq = store.get(args[1], deque())
         if dq:
