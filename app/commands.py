@@ -100,6 +100,7 @@ def cmd_blpop(connection, args, ctx):
     result = [args[1]]
     thread_id = threading.get_ident()
     waiter = {"q": deque([]), "e": threading.Event()}
+    timeout = int(args[2]) if len(args) == 3 else None
     with lock:
         dq = store.get(args[1], deque())
         if dq:
@@ -109,8 +110,15 @@ def cmd_blpop(connection, args, ctx):
         waiter = ctx.waiters.setdefault(args[1], waiter)
         waiter["q"].append(thread_id)
         waiter["e"].clear()
+    alive = True
     while True:
-        waiter["e"].wait()
+        alive = waiter["e"].wait(timeout)
+        if not alive:
+            with lock:
+                waiter["q"].remove(thread_id)
+            connection.sendall(encode(None, BARR))
+            return
+
         if waiter["q"][0] == thread_id:
             with lock:
                 waiter["e"].clear()
@@ -141,4 +149,3 @@ COMMAND_HANDLERS = {
     "LPOP": cmd_lpop,
     "BLPOP": cmd_blpop,
 }
-

@@ -3,8 +3,8 @@ SSTR = 1  # Simple String  "+OK\r\n"
 BSTR = 2  # Bulk String    "$6\r\nfoobar\r\n"
 BARR = 3  # Bulk Array     "*2\r\n..."
 INTR = 4  # Integer        ":42\r\n"
- 
- 
+
+
 def encode(item, type):
     if type == SSTR:
         return f"+{item}\r\n".encode()
@@ -13,7 +13,9 @@ def encode(item, type):
             return b"$-1\r\n"
         return f"${len(item)}\r\n{item}\r\n".encode()
     elif type == BARR:
-        if item is None or len(item) == 0:
+        if item is None:
+            return b"*-1\r\n"
+        if len(item) == 0:
             return b"*0\r\n"
         res = f"*{len(item)}\r\n".encode()
         for each in item:
@@ -22,13 +24,13 @@ def encode(item, type):
     elif type == INTR:
         return f":{item}\r\n".encode()
     return b"$-1\r\n"
- 
- 
+
+
 def parse(raw_bytes):
     parts = raw_bytes.split(b"\r\n")
     return _parse_parts(parts)
- 
- 
+
+
 def _parse_parts(tlist):
     if not tlist or not tlist[0]:
         return []
@@ -42,7 +44,8 @@ def _parse_parts(tlist):
         result = []
         cursor = 1
         for _ in range(count):
-            result.append(_parse_parts(tlist[cursor: cursor + 2]))
+            result.append(_parse_parts(tlist[cursor : cursor + 2]))
             cursor += 2
         return result
     return []
+
