@@ -1,7 +1,6 @@
 import threading
 from collections import deque
 
-from app.server import Context
 from .resp import encode, SSTR, BSTR, BARR, INTR
 from .utils import delete_key, slice_deque
 
@@ -14,7 +13,7 @@ def cmd_echo(connection, args, _ctx):
     connection.sendall(encode(args[1], BSTR))
 
 
-def cmd_set(connection, args, ctx: Context):
+def cmd_set(connection, args, ctx):
     store = ctx.store
     store[args[1]] = args[2]
     if len(args) == 5:
@@ -25,19 +24,19 @@ def cmd_set(connection, args, ctx: Context):
     connection.sendall(encode("OK", SSTR))
 
 
-def cmd_get(connection, args, ctx: Context):
+def cmd_get(connection, args, ctx):
     store = ctx.store
     value = store.get(args[1])
     connection.sendall(encode(value, BSTR))
 
 
-def cmd_llen(connection, args, ctx: Context):
+def cmd_llen(connection, args, ctx):
     store = ctx.store
     dq = store.get(args[1], deque())
     connection.sendall(encode(len(dq), INTR))
 
 
-def cmd_rpush(connection, args, ctx: Context):
+def cmd_rpush(connection, args, ctx):
     store = ctx.store
     lock = ctx.lock
     waiter = {"q": deque([]), "e": threading.Event()}
@@ -50,7 +49,7 @@ def cmd_rpush(connection, args, ctx: Context):
     connection.sendall(encode(len(dq), INTR))
 
 
-def cmd_lpush(connection, args, ctx: Context):
+def cmd_lpush(connection, args, ctx):
     store = ctx.store
     lock = ctx.lock
     waiter = {"q": deque([]), "e": threading.Event()}
@@ -63,7 +62,7 @@ def cmd_lpush(connection, args, ctx: Context):
     connection.sendall(encode(len(dq), INTR))
 
 
-def cmd_lrange(connection, args, ctx: Context):
+def cmd_lrange(connection, args, ctx):
     store = ctx.store
     start, end = int(args[2]), int(args[3])
     dq = store.get(args[1], deque())
@@ -74,7 +73,7 @@ def cmd_lrange(connection, args, ctx: Context):
     connection.sendall(encode(slice_deque(dq, start, end + 1), BARR))
 
 
-def cmd_lpop(connection, args, ctx: Context):
+def cmd_lpop(connection, args, ctx):
     store = ctx.store
     dq = store.get(args[1], deque())
     ret_arr = len(args) == 3
@@ -95,7 +94,7 @@ def cmd_lpop(connection, args, ctx: Context):
         connection.sendall(encode(value, BSTR))
 
 
-def cmd_blpop(connection, args, ctx: Context):
+def cmd_blpop(connection, args, ctx):
     store = ctx.store
     lock = ctx.lock
     result = [args[1]]
