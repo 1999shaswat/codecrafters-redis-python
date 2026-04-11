@@ -1,5 +1,5 @@
-from resp import parse
-from commands import COMMAND_HANDLERS
+from .resp import parse
+from .commands import COMMAND_HANDLERS
 
 
 def handle_connection(connection, ctx):

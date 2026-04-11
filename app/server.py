@@ -1,7 +1,7 @@
 import socket
 import threading
 
-from handler import handle_connection
+from .handler import handle_connection
 
 HOST = "localhost"
 PORT = 6379

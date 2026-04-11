@@ -2,8 +2,8 @@ import threading
 from collections import deque
 
 from app.server import Context
-from resp import encode, SSTR, BSTR, BARR, INTR
-from utils import delete_key, slice_deque
+from .resp import encode, SSTR, BSTR, BARR, INTR
+from .utils import delete_key, slice_deque
 
 
 def cmd_ping(connection, _args, _ctx):
