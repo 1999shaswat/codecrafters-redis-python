@@ -1,4 +1,5 @@
 from itertools import islice
+import time
 
 from .resp import ESTR, encode
 
@@ -7,6 +8,9 @@ def autogenerate(stream, eid):
     """Autogenerate the stream entry ID"""
     ts, seq = eid.split("-")
     gts, gseq = ts == "*", seq == "*"
+    if gts:
+        ts = time.time_ns() // 1_000_000
+
     if not stream:
         if gseq:
             seq = 1 if ts == "0" else 0
