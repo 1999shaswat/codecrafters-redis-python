@@ -4,6 +4,7 @@ from .resp import ESTR, encode
 
 
 def autogenerate(stream, eid):
+    """Autogenerate the stream entry ID"""
     ts, seq = eid.split("-")
     gts, gseq = ts == "*", seq == "*"
     if not stream:
@@ -12,7 +13,8 @@ def autogenerate(stream, eid):
     else:
         last_eid = stream[-1][0]
         lts, lseq = last_eid.split("-")
-        seq = int(lseq) + 1 if gseq else seq
+        if gseq:
+            seq = int(lseq) + 1 if ts == lts else 0
 
     return f"{ts}-{seq}"
 
@@ -21,14 +23,14 @@ def validate(connection, stream, eid):
     """Validate the stream entry ID"""
     if len(eid.split("-")) != 2:
         connection.sendall(encode("ERR The ID specified in XADD is invalid", ESTR))
-        return
+        return True
 
     auto_gen = "*" in eid
     if not auto_gen and not (parse_id(eid) > parse_id("0-0")):
         connection.sendall(
             encode("ERR The ID specified in XADD must be greater than 0-0", ESTR)
         )
-        return
+        return True
 
     err = False
     if stream:
@@ -36,7 +38,7 @@ def validate(connection, stream, eid):
         if not auto_gen and not (parse_id(eid) > parse_id(last_eid)):
             err = True
         eid_ts = eid.split("-")[0]
-        if auto_gen and eid_ts != "*" and not (parse_id(last_eid)[0] > int(eid_ts)):
+        if auto_gen and eid_ts != "*" and (parse_id(last_eid)[0] > int(eid_ts)):
             err = True
 
     if err:
@@ -46,7 +48,8 @@ def validate(connection, stream, eid):
                 ESTR,
             )
         )
-        return
+        return True
+    return False
 
 
 def parse_id(id):

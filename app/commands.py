@@ -145,10 +145,9 @@ def cmd_type(connection, args, ctx):
 def cmd_xadd(connection, args, ctx):
     eid = args[2]
     stream = ctx.store.setdefault(args[1], [])
-    validate(connection, stream, eid)
-    print("validate")
+    if validate(connection, stream, eid):
+        return
     eid = autogenerate(stream, eid)
-    print("autogenerate")
     e_dict = {}
     for i in range(3, len(args), 2):
         e_dict[args[i]] = args[i + 1]
