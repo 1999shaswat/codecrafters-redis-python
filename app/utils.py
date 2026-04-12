@@ -6,6 +6,8 @@ from .resp import ESTR, encode
 
 def autogenerate(stream, eid):
     """Autogenerate the stream entry ID"""
+    if eid == "*":
+        eid = "*-*"
     ts, seq = eid.split("-")
     gts, gseq = ts == "*", seq == "*"
     if gts:
@@ -23,36 +25,32 @@ def autogenerate(stream, eid):
     return f"{ts}-{seq}"
 
 
-def is_invalid(connection, stream, eid):
+def is_valid(connection, stream, eid):
     """Validate the stream entry ID"""
-    if len(eid.split("-")) != 2:
-        connection.sendall(encode("ERR The ID specified in XADD is invalid", ESTR))
-        return True
-
     auto_gen = "*" in eid
     if not auto_gen and not (parse_id(eid) > parse_id("0-0")):
         connection.sendall(
             encode("ERR The ID specified in XADD must be greater than 0-0", ESTR)
         )
-        return True
+        return False
 
-    err = False
+    valid = True
     if stream:
         last_eid = stream[-1][0]
         if not auto_gen and not (parse_id(eid) > parse_id(last_eid)):
-            err = True
+            valid = False
         eid_ts = eid.split("-")[0]
         if auto_gen and eid_ts != "*" and (parse_id(last_eid)[0] > int(eid_ts)):
-            err = True
+            valid = False
 
-    if err:
+    if not valid:
         connection.sendall(
             encode(
                 "ERR The ID specified in XADD is equal or smaller than the target stream top item",
                 ESTR,
             )
         )
-    return err
+    return valid
 
 
 def parse_id(id):
