@@ -137,6 +137,16 @@ def cmd_blpop(connection, args, ctx):
                 waiter["e"].clear()
 
 
+def cmd_type(connection, args, ctx):
+    val = ctx.store.get(args[1])
+    if val is None:
+        connection.sendall(encode("none", SSTR))
+        return
+    connection.sendall(encode(TYPES[type(val).__name__], SSTR))
+
+
+TYPES = {"str": "string"}
+
 # Dispatch table: command name → handler function
 COMMAND_HANDLERS = {
     "PING": cmd_ping,
@@ -149,4 +159,5 @@ COMMAND_HANDLERS = {
     "LRANGE": cmd_lrange,
     "LPOP": cmd_lpop,
     "BLPOP": cmd_blpop,
+    "TYPE": cmd_type,
 }
