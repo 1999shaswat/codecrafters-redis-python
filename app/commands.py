@@ -166,4 +166,5 @@ COMMAND_HANDLERS = {
     "LPOP": cmd_lpop,
     "BLPOP": cmd_blpop,
     "TYPE": cmd_type,
+    "XADD": cmd_xadd,
 }
