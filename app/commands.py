@@ -2,7 +2,7 @@ import threading
 from collections import deque
 
 from .resp import BARR, BSTR, INTR, SSTR, encode
-from .utils import autogenerate, delete_key, slice_deque, validate
+from .utils import autogenerate, delete_key, slice_deque, is_invalid
 
 
 def cmd_ping(connection, _args, _ctx):
@@ -145,12 +145,10 @@ def cmd_type(connection, args, ctx):
 def cmd_xadd(connection, args, ctx):
     eid = args[2]
     stream = ctx.store.setdefault(args[1], [])
-    if validate(connection, stream, eid):
+    if is_invalid(connection, stream, eid):
         return
     eid = autogenerate(stream, eid)
-    e_dict = {}
-    for i in range(3, len(args), 2):
-        e_dict[args[i]] = args[i + 1]
+    e_dict = {args[i]: args[i + 1] for i in range(3, len(args), 2)}
     stream.append((eid, e_dict))
     connection.sendall(encode(eid, BSTR))
 

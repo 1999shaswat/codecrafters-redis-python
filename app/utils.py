@@ -19,7 +19,7 @@ def autogenerate(stream, eid):
     return f"{ts}-{seq}"
 
 
-def validate(connection, stream, eid):
+def is_invalid(connection, stream, eid):
     """Validate the stream entry ID"""
     if len(eid.split("-")) != 2:
         connection.sendall(encode("ERR The ID specified in XADD is invalid", ESTR))
@@ -48,8 +48,7 @@ def validate(connection, stream, eid):
                 ESTR,
             )
         )
-        return True
-    return False
+    return err
 
 
 def parse_id(id):
