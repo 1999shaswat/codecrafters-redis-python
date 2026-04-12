@@ -1,7 +1,7 @@
 import threading
 from collections import deque
 
-from .resp import ESTR, encode, SSTR, BSTR, BARR, INTR
+from .resp import BARR, BSTR, ESTR, INTR, SSTR, encode
 from .utils import delete_key, parse_id, slice_deque
 
 
@@ -151,8 +151,8 @@ def cmd_xadd(connection, args, ctx):
         return
     stream = ctx.store.setdefault(args[1], [])
     if stream:
-        lastitem = stream[-1]
-        if not (parse_id(eid) > parse_id(lastitem)):
+        last_eid = stream[-1][0]
+        if not (parse_id(eid) > parse_id(last_eid)):
             connection.sendall(
                 encode(
                     "ERR The ID specified in XADD is equal or smaller than the target stream top item",
