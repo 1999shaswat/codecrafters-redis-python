@@ -142,9 +142,18 @@ def cmd_type(connection, args, ctx):
     connection.sendall(encode(TYPES[type(val).__name__], SSTR))
 
 
-TYPES = {"str": "string", "NoneType": "none"}
+def cmd_xadd(connection, args, ctx):
+    stream = ctx.store.setdefault(args[1], [])
+    e_dict = {}
+    for i in range(3, len(args), 2):
+        e_dict[args[i]] = args[i + 1]
+    stream.append((args[2], e_dict))
+    connection.sendall(encode(args[2], BSTR))
 
-# Dispatch table: command name → handler function
+
+TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
+
+# Dispatch table: command name: handler function
 COMMAND_HANDLERS = {
     "PING": cmd_ping,
     "ECHO": cmd_echo,
