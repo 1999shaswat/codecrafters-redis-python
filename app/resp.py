@@ -1,4 +1,5 @@
 # RESP Data Types
+ESTR = 0  # Error Simple String  "-ERR message\r\n"
 SSTR = 1  # Simple String  "+OK\r\n"
 BSTR = 2  # Bulk String    "$6\r\nfoobar\r\n"
 BARR = 3  # Bulk Array     "*2\r\n..."
@@ -6,7 +7,9 @@ INTR = 4  # Integer        ":42\r\n"
 
 
 def encode(item, type):
-    if type == SSTR:
+    if type == ESTR:
+        return f"-{item}\r\n".encode()
+    elif type == SSTR:
         return f"+{item}\r\n".encode()
     elif type == BSTR:
         if item is None:
