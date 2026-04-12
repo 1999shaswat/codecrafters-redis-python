@@ -1,5 +1,53 @@
 from itertools import islice
 
+from .resp import ESTR, encode
+
+
+def autogenerate(stream, eid):
+    ts, seq = eid.split("-")
+    gts, gseq = ts == "*", seq == "*"
+    if not stream:
+        if gseq:
+            seq = 1 if ts == "0" else 0
+    else:
+        last_eid = stream[-1][0]
+        lts, lseq = last_eid.split("-")
+        seq = int(lseq) + 1 if gseq else seq
+
+    return f"{ts}-{seq}"
+
+
+def validate(connection, stream, eid):
+    """Validate the stream entry ID"""
+    if len(eid.split("-")) != 2:
+        connection.sendall(encode("ERR The ID specified in XADD is invalid", ESTR))
+        return
+
+    auto_gen = "*" in eid
+    if not auto_gen and not (parse_id(eid) > parse_id("0-0")):
+        connection.sendall(
+            encode("ERR The ID specified in XADD must be greater than 0-0", ESTR)
+        )
+        return
+
+    err = False
+    if stream:
+        last_eid = stream[-1][0]
+        if not auto_gen and not (parse_id(eid) > parse_id(last_eid)):
+            err = True
+        eid_ts = eid.split("-")[0]
+        if auto_gen and eid_ts != "*" and not (parse_id(last_eid)[0] > int(eid_ts)):
+            err = True
+
+    if err:
+        connection.sendall(
+            encode(
+                "ERR The ID specified in XADD is equal or smaller than the target stream top item",
+                ESTR,
+            )
+        )
+        return
+
 
 def parse_id(id):
     """Parse the stream entry ID into a tuple"""
@@ -18,4 +66,3 @@ def slice_deque(d, start, stop):
     result = list(islice(d, 0, stop - start))
     d.rotate(start)
     return result
-

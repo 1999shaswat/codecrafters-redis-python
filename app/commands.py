@@ -1,8 +1,8 @@
 import threading
 from collections import deque
 
-from .resp import BARR, BSTR, ESTR, INTR, SSTR, encode
-from .utils import delete_key, parse_id, slice_deque
+from .resp import BARR, BSTR, INTR, SSTR, encode
+from .utils import autogenerate, delete_key, slice_deque, validate
 
 
 def cmd_ping(connection, _args, _ctx):
@@ -144,23 +144,9 @@ def cmd_type(connection, args, ctx):
 
 def cmd_xadd(connection, args, ctx):
     eid = args[2]
-    if not (parse_id(eid) > parse_id("0-0")):
-        connection.sendall(
-            encode("ERR The ID specified in XADD must be greater than 0-0", ESTR)
-        )
-        return
     stream = ctx.store.setdefault(args[1], [])
-    if stream:
-        last_eid = stream[-1][0]
-        if not (parse_id(eid) > parse_id(last_eid)):
-            connection.sendall(
-                encode(
-                    "ERR The ID specified in XADD is equal or smaller than the target stream top item",
-                    ESTR,
-                )
-            )
-            return
-
+    validate(connection, stream, eid)
+    eid = autogenerate(stream, eid)
     e_dict = {}
     for i in range(3, len(args), 2):
         e_dict[args[i]] = args[i + 1]
