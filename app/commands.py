@@ -114,8 +114,7 @@ def cmd_blpop(connection, args, ctx):
         dq = store.get(args[1], deque())
         if dq:
             result.append(dq.popleft())
-            connection.sendall(encode(result, BARR))
-            return
+            return connection.sendall(encode(result, BARR))
         waiter = ctx.waiters.setdefault(args[1], waiter)
         waiter["q"].append(thread_id)
         waiter["e"].clear()
@@ -152,12 +151,16 @@ def cmd_type(connection, args, ctx):
 
 def cmd_xadd(connection, args, ctx):
     eid = args[2]
-    stream = ctx.store.setdefault(args[1], [])
-    if eid != "*" and not is_valid(connection, stream, eid):
-        return
-    eid = autogenerate(stream, eid)
-    e_dict = {args[i]: args[i + 1] for i in range(3, len(args), 2)}
-    stream.append((eid, e_dict))
+    lock = ctx.lock
+    with lock:
+        waiter_event = ctx.waiters.setdefault(args[1], threading.Event())
+        stream = ctx.store.setdefault(args[1], [])
+        if eid != "*" and not is_valid(connection, stream, eid):
+            return
+        eid = autogenerate(stream, eid)
+        e_dict = {args[i]: args[i + 1] for i in range(3, len(args), 2)}
+        stream.append((eid, e_dict))
+        waiter_event.set()
     connection.sendall(encode(eid, BSTR))
 
 
@@ -171,6 +174,9 @@ def cmd_xrange(connection, args, ctx):
 
 
 def cmd_xread(connection, args, ctx):
+    if args[1] == "BLOCK":
+        cmd_xread_block(connection, args, ctx)
+        return
     streams_args = args[2:]
     mid = len(streams_args) // 2
     keys = streams_args[:mid]
@@ -184,6 +190,30 @@ def cmd_xread(connection, args, ctx):
         tmp = [flatten_entry(e) for e in stream[start:]]
         result.append([key, tmp])
     connection.sendall(encode(result, BARR))
+
+
+def cmd_xread_block(connection, args, ctx):
+    timeout = float(args[2])
+    timeout = None if timeout == 0 else timeout
+    key, eid = args[4], args[5]
+    stream = ctx.store.setdefault(key, [])
+    lock = ctx.lock
+    result = []
+    waiter_event = ctx.waiters.setdefault(key, threading.Event())
+    while True:
+        alive = waiter_event.wait(timeout)
+        if not alive:
+            return connection.sendall(encode(None, BARR))
+        with lock:
+            start = bsearch_lower(stream, eid)
+            if start < len(stream):
+                if stream[start][0] == eid:
+                    start += 1
+            if start < len(stream):
+                tmp = [flatten_entry(e) for e in stream[start:]]
+                result.append([key, tmp])
+                return connection.sendall(encode(result, BARR))
+            waiter_event.clear()
 
 
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
