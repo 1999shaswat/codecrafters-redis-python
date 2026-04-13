@@ -2,7 +2,15 @@ import threading
 from collections import deque
 
 from .resp import BARR, BSTR, INTR, SSTR, encode
-from .utils import autogenerate, delete_key, slice_deque, is_valid
+from .utils import (
+    autogenerate,
+    bsearch_lower,
+    bsearch_upper,
+    delete_key,
+    flatten_entry,
+    slice_deque,
+    is_valid,
+)
 
 
 def cmd_ping(connection, _args, _ctx):
@@ -155,6 +163,15 @@ def cmd_xadd(connection, args, ctx):
     connection.sendall(encode(eid, BSTR))
 
 
+def cmd_xrange(connection, args, ctx):
+    start, end = args[2], args[3]
+    stream = ctx.store.setdefault(args[1], [])
+    s_ind = bsearch_lower(stream, start)
+    e_ind = bsearch_upper(stream, end)
+    result = [flatten_entry(e) for e in stream[s_ind : e_ind + 1]]
+    connection.sendall(encode(result, BARR))
+
+
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
 
 # Dispatch table: command name: handler function
@@ -171,4 +188,5 @@ COMMAND_HANDLERS = {
     "BLPOP": cmd_blpop,
     "TYPE": cmd_type,
     "XADD": cmd_xadd,
+    "XRANGE": cmd_xrange,
 }

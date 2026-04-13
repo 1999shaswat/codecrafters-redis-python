@@ -22,7 +22,10 @@ def encode(item, type):
             return b"*0\r\n"
         res = f"*{len(item)}\r\n".encode()
         for each in item:
-            res += encode(each, BSTR)
+            if isinstance(each, list):
+                res += encode(each, BARR)
+            elif isinstance(each, str):
+                res += encode(each, BSTR)
         return res
     elif type == INTR:
         return f":{item}\r\n".encode()
@@ -51,4 +54,3 @@ def _parse_parts(tlist):
             cursor += 2
         return result
     return []
-

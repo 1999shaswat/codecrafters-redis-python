@@ -1,7 +1,48 @@
 from itertools import islice
+from math import floor, ceil
 import time
+import sys
 
 from .resp import ESTR, encode
+
+
+def flatten_entry(entry):
+    """Flattens each stream entry"""
+    eid, d = entry
+    fields = [x for item in d.items() for x in item]
+    return [eid, fields]
+
+
+def bsearch_lower(stream, val):
+    """stream: only for start: lower bound"""
+    if "-" not in val:
+        val += "-0"
+    s, e = 0, len(stream)
+    tgt = parse_id(val)
+    while s < e:
+        m = floor((s + e) / 2)
+        cur = parse_id(stream[m][0])
+        if cur < tgt:
+            s = m + 1
+        else:
+            e = m
+    return s
+
+
+def bsearch_upper(stream, val):
+    """stream: only for end: upper bound"""
+    if "-" not in val:
+        val += f"-{sys.maxsize}"
+    s, e = 0, len(stream)
+    tgt = parse_id(val)
+    while s < e:
+        m = ceil((s + e) / 2)
+        cur = parse_id(stream[m][0])
+        if cur > tgt:
+            e = m - 1
+        else:
+            s = m
+    return e
 
 
 def autogenerate(stream, eid):
