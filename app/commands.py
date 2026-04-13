@@ -8,6 +8,7 @@ from .utils import (
     bsearch_upper,
     delete_key,
     flatten_entry,
+    safe_convert,
     slice_deque,
     is_valid,
 )
@@ -23,7 +24,7 @@ def cmd_echo(connection, args, _ctx):
 
 def cmd_set(connection, args, ctx):
     store = ctx.store
-    store[args[1]] = args[2]
+    store[args[1]] = safe_convert(args[2])
     if len(args) == 5:
         time = int(args[4])
         if args[3].upper() == "PX":

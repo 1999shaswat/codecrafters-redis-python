@@ -105,6 +105,16 @@ def delete_key(keystore, key):
     keystore.pop(key, None)
 
 
+def safe_convert(value):
+    """Safely convert value to number (int/float) if possible"""
+    try:
+        if "." not in value:
+            return int(value)
+        return float(value)
+    except ValueError:
+        return value
+
+
 def slice_deque(d, start, stop):
     """Return a list slice from a deque without permanently mutating it."""
     d.rotate(-start)
