@@ -1,7 +1,7 @@
 import threading
 from collections import deque
 
-from .resp import BARR, BSTR, INTR, SSTR, encode
+from .resp import BARR, BSTR, ESTR, INTR, SSTR, encode
 from .utils import (
     autogenerate,
     bsearch_lower,
@@ -220,6 +220,8 @@ def cmd_xread_block(connection, args, ctx):
 
 def cmd_incr(connection, args, ctx):
     val = ctx.store.setdefault(args[1], 0)
+    if isinstance(val, str):
+        connection.sendall(encode("ERR value is not an integer or out of range", ESTR))
     val = int(val) + 1
     ctx.store[args[1]] = val
     connection.sendall(encode(val, INTR))
