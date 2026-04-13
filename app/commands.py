@@ -216,6 +216,13 @@ def cmd_xread_block(connection, args, ctx):
             waiter_event.clear()
 
 
+def cmd_incr(connection, args, ctx):
+    val = ctx.store.get(args[1])
+    val = int(val) + 1
+    ctx.store[args[1]] = val
+    connection.sendall(encode(val, INTR))
+
+
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
 
 # Dispatch table: command name: handler function
@@ -234,4 +241,5 @@ COMMAND_HANDLERS = {
     "XADD": cmd_xadd,
     "XRANGE": cmd_xrange,
     "XREAD": cmd_xread,
+    "INCR": cmd_incr,
 }
