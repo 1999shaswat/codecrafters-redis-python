@@ -221,10 +221,11 @@ def cmd_xread_block(connection, args, ctx):
 
 def cmd_incr(connection, args, ctx):
     val = ctx.store.setdefault(args[1], 0)
-    print(ctx.store)
     if isinstance(val, str):
-        connection.sendall(encode("ERR value is not an integer or out of range", ESTR))
-    val = int(val) + 1
+        return connection.sendall(
+            encode("ERR value is not an integer or out of range", ESTR)
+        )
+    val += 1
     ctx.store[args[1]] = val
     connection.sendall(encode(val, INTR))
 
