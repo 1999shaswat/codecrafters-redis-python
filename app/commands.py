@@ -170,6 +170,19 @@ def cmd_xrange(connection, args, ctx):
     connection.sendall(encode(result, BARR))
 
 
+def cmd_xread(connection, args, ctx):
+    streamkeys = [(args[i], args[i + 1]) for i in range(2, len(args), 2)]
+    result = []
+    for key, eid in streamkeys:
+        stream = ctx.store.setdefault(key, [])
+        start = bsearch_lower(stream, eid)
+        if start < len(stream) and stream[start][0] == eid:
+            start += 1
+        tmp = [flatten_entry(e) for e in stream[start:]]
+        result.append([key, tmp])
+    connection.sendall(encode(result, BARR))
+
+
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
 
 # Dispatch table: command name: handler function
@@ -187,4 +200,5 @@ COMMAND_HANDLERS = {
     "TYPE": cmd_type,
     "XADD": cmd_xadd,
     "XRANGE": cmd_xrange,
+    "XREAD": cmd_xread,
 }
