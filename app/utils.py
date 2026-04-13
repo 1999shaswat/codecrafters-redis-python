@@ -17,7 +17,7 @@ def bsearch_lower(stream, val):
     """stream: only for start: lower bound"""
     if "-" not in val:
         val += "-0"
-    s, e = 0, len(stream)
+    s, e = 0, len(stream) - 1
     tgt = parse_id(val)
     while s < e:
         m = floor((s + e) / 2)
@@ -33,7 +33,7 @@ def bsearch_upper(stream, val):
     """stream: only for end: upper bound"""
     if "-" not in val:
         val += f"-{sys.maxsize}"
-    s, e = 0, len(stream)
+    s, e = 0, len(stream) - 1
     tgt = parse_id(val)
     while s < e:
         m = ceil((s + e) / 2)
