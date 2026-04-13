@@ -155,9 +155,7 @@ def cmd_xadd(connection, args, ctx):
     stream = ctx.store.setdefault(args[1], [])
     if eid != "*" and not is_valid(connection, stream, eid):
         return
-    print("v")
     eid = autogenerate(stream, eid)
-    print("a")
     e_dict = {args[i]: args[i + 1] for i in range(3, len(args), 2)}
     stream.append((eid, e_dict))
     connection.sendall(encode(eid, BSTR))
