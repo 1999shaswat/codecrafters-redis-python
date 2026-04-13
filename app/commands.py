@@ -35,6 +35,8 @@ def cmd_set(connection, args, ctx):
 def cmd_get(connection, args, ctx):
     store = ctx.store
     value = store.get(args[1])
+    if isinstance(value, int):
+        return connection.sendall(encode(value, INTR))
     connection.sendall(encode(value, BSTR))
 
 
