@@ -191,7 +191,7 @@ def cmd_xread(connection, args, ctx):
 
 
 def cmd_xread_block(connection, args, ctx):
-    timeout = float(args[2])
+    timeout = float(args[2]) / 1000
     timeout = None if timeout == 0 else timeout
     key, eid = args[4], args[5]
     stream = ctx.store.setdefault(key, [])
