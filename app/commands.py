@@ -172,8 +172,12 @@ def cmd_xrange(connection, args, ctx):
 
 def cmd_xread(connection, args, ctx):
     streamkeys = [(args[i], args[i + 1]) for i in range(2, len(args), 2)]
+    arg_s, arg_e = 2, len(args) - 1
+    mid = (arg_s + arg_e) // 2 + 1
+    streamkeys = [args[i] for i in range(2, mid)]
+    eids = [args[i] for i in range(mid, len(args))]
     result = []
-    for key, eid in streamkeys:
+    for key, eid in zip(streamkeys, eids):
         stream = ctx.store.setdefault(key, [])
         start = bsearch_lower(stream, eid)
         if start < len(stream) and stream[start][0] == eid:
