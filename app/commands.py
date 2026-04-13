@@ -174,8 +174,7 @@ def cmd_xrange(connection, args, ctx):
 
 
 def cmd_xread(connection, args, ctx):
-    print(args)
-    if args[1] == "BLOCK":
+    if args[1].upper() == "BLOCK":
         return cmd_xread_block(connection, args, ctx)
     streams_args = args[2:]
     mid = len(streams_args) // 2
