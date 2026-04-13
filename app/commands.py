@@ -164,7 +164,7 @@ def cmd_xadd(connection, args, ctx):
 def cmd_xrange(connection, args, ctx):
     start, end = args[2], args[3]
     stream = ctx.store.setdefault(args[1], [])
-    s_ind = bsearch_lower(stream, start)
+    s_ind = 0 if start == "-" else bsearch_lower(stream, start)
     e_ind = bsearch_upper(stream, end)
     result = [flatten_entry(e) for e in stream[s_ind : e_ind + 1]]
     connection.sendall(encode(result, BARR))
