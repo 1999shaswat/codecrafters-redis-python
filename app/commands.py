@@ -217,7 +217,7 @@ def cmd_xread_block(connection, args, ctx):
 
 
 def cmd_incr(connection, args, ctx):
-    val = ctx.store.get(args[1])
+    val = ctx.store.setdefault(args[1], 0)
     val = int(val) + 1
     ctx.store[args[1]] = val
     connection.sendall(encode(val, INTR))
