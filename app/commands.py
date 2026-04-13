@@ -195,6 +195,8 @@ def cmd_xread_block(connection, args, ctx):
     timeout = None if timeout == 0 else timeout
     key, eid = args[4], args[5]
     stream = ctx.store.setdefault(key, [])
+    if eid == "$":
+        eid = stream[-1][0] if stream else "0-0"
     lock = ctx.lock
     result = []
     waiter_event = ctx.waiters.setdefault(key, threading.Event())
