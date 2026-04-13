@@ -124,8 +124,7 @@ def cmd_blpop(connection, args, ctx):
         if not alive:
             with lock:
                 waiter["q"].remove(thread_id)
-            connection.sendall(encode(None, BARR))
-            return
+            return connection.sendall(encode(None, BARR))
 
         if waiter["q"][0] == thread_id:
             with lock:
@@ -195,7 +194,6 @@ def cmd_xread_block(connection, args, ctx):
     timeout = float(args[2])
     timeout = None if timeout == 0 else timeout
     key, eid = args[4], args[5]
-    print(key, eid)
     stream = ctx.store.setdefault(key, [])
     lock = ctx.lock
     result = []
