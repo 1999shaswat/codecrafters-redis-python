@@ -35,7 +35,9 @@ def cmd_set(connection, args, ctx):
 def cmd_get(connection, args, ctx):
     store = ctx.store
     value = store.get(args[1])
-    connection.sendall(encode(f"{value}", BSTR))
+    if value:
+        value = str(value)
+    connection.sendall(encode(value, BSTR))
 
 
 def cmd_llen(connection, args, ctx):
