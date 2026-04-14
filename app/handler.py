@@ -31,7 +31,7 @@ def handle_connection(connection, ctx):
 
         command = parsed[0].upper()
 
-        if command in ("MULTI", "EXEC", "DISCARD", "WATCH"):
+        if command in ("MULTI", "EXEC", "DISCARD", "WATCH", "UNWATCH"):
             if command == "MULTI":
                 conn_state.multi = True
                 connection.sendall(encode("OK", SSTR))
@@ -60,6 +60,10 @@ def handle_connection(connection, ctx):
                 else:
                     cmd_watch(parsed, conn_state, ctx)
                     connection.sendall(encode("OK", SSTR))
+            elif command == "UNWATCH":
+                conn_state.cmd_q.clear()
+                connection.sendall(encode("OK", SSTR))
+
         elif conn_state.multi:  # commands other than MULTI EXEC DISCARD
             conn_state.cmd_q.append(parsed)
             connection.sendall(b"+QUEUED\r\n")
