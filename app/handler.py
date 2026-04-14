@@ -78,7 +78,7 @@ def handle_connection(connection, ctx):
 def cmd_watch(args, conn_state, ctx):
     keys = args[1:]
     for key in keys:
-        conn_state.watcing[key] = ctx.store.get(key)
+        conn_state.watching[key] = ctx.store.get(key)
 
 
 def cmd_exec(conn_state, ctx):
