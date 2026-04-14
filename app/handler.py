@@ -53,8 +53,13 @@ def handle_connection(connection, ctx):
                 else:
                     connection.sendall(encode("DISCARD without MULTI", ESTR))
             elif command == "WATCH":
-                cmd_watch(parsed, conn_state, ctx)
-                connection.sendall(encode("OK", SSTR))
+                if conn_state.multi:
+                    connection.sendall(
+                        encode("WATCH inside MULTI is not allowed", ESTR)
+                    )
+                else:
+                    cmd_watch(parsed, conn_state, ctx)
+                    connection.sendall(encode("OK", SSTR))
         elif conn_state.multi:  # commands other than MULTI EXEC DISCARD
             conn_state.cmd_q.append(parsed)
             connection.sendall(b"+QUEUED\r\n")
