@@ -1,4 +1,4 @@
-from .resp import ESTR, SSTR, encode, parse
+from .resp import BARR, ESTR, SSTR, encode, parse
 from .commands import COMMAND_HANDLERS
 
 
@@ -6,7 +6,7 @@ class ConnState:
     def __init__(self):
         self.multi = False
         self.cmd_q = []
-        self.watcher = {}
+        self.watching = {}
 
 
 class MockConnection:
@@ -38,7 +38,7 @@ def handle_connection(connection, ctx):
             elif command == "EXEC":
                 if conn_state.multi:
                     # run exec
-                    response = cmd_exec(conn_state.cmd_q, ctx)
+                    response = cmd_exec(conn_state, ctx)
                     conn_state.multi = False
                     conn_state.cmd_q.clear()
                     connection.sendall(response)
@@ -77,12 +77,16 @@ def handle_connection(connection, ctx):
 
 def cmd_watch(args, conn_state, ctx):
     key = args[1]
-    conn_state.watcher[key] = ctx.store.get(key)
+    conn_state.watching[key] = ctx.store.get(key)
 
 
-def cmd_exec(queue, ctx):
+def cmd_exec(conn_state, ctx):
     respCollector = MockConnection()
-    for parsed in queue:
+    for key in conn_state.watching:
+        if conn_state.watching[key] != ctx.store.get(key):
+            return encode(None, BARR)
+
+    for parsed in conn_state.cmd_q:
         command = parsed[0].upper()
         handler = COMMAND_HANDLERS.get(command)
         if handler:
