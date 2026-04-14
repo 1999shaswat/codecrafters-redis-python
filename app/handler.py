@@ -44,7 +44,7 @@ def handle_connection(connection, ctx):
             if handler:
                 handler(connection, parsed, ctx)
             else:
-                connection.sendall(b"-ERR unknown command\r\n")
+                connection.sendall(encode("unknown command", ESTR))
 
     connection.close()
 

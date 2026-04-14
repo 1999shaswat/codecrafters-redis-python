@@ -71,7 +71,7 @@ def is_valid(connection, stream, eid):
     auto_gen = "*" in eid
     if not auto_gen and not (parse_id(eid) > parse_id("0-0")):
         connection.sendall(
-            encode("ERR The ID specified in XADD must be greater than 0-0", ESTR)
+            encode("The ID specified in XADD must be greater than 0-0", ESTR)
         )
         return False
 
@@ -87,7 +87,7 @@ def is_valid(connection, stream, eid):
     if not valid:
         connection.sendall(
             encode(
-                "ERR The ID specified in XADD is equal or smaller than the target stream top item",
+                "The ID specified in XADD is equal or smaller than the target stream top item",
                 ESTR,
             )
         )
