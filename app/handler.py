@@ -17,15 +17,24 @@ def handle_connection(connection, ctx):
             continue
 
         command = parsed[0].upper()
-        if command == "MULTI":
-            conn_state.multi = True
-            connection.sendall(b"+OK\r\n")
-        elif conn_state.multi:
-            if command not in ("EXEC", "DISCARD"):
-                conn_state.cmd_q.append((parsed))
-                connection.sendall(b"+QUEUED\r\n")
-                continue
-            # handle exec discard here
+
+        if command in ("MULTI", "EXEC", "DISCARD"):
+            if command == "MULTI":
+                conn_state.multi = True
+                connection.sendall(b"+OK\r\n")
+            elif command == "EXEC":
+                if conn_state.multi:
+                    # run exec
+                    pass
+                else:
+                    connection.sendall(b"-ERR EXEC without MULTI\r\n")
+            elif command == "DISCARD":
+                # handle discard
+                pass
+        elif conn_state.multi:  # commands other than MULTI EXEC DISCARD
+            conn_state.cmd_q.append((parsed))
+            connection.sendall(b"+QUEUED\r\n")
+            continue
         else:
             handler = COMMAND_HANDLERS.get(command)
 
