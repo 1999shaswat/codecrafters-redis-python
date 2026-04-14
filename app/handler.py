@@ -1,4 +1,4 @@
-from .resp import parse
+from .resp import BARR, encode, parse
 from .commands import COMMAND_HANDLERS
 
 
@@ -25,7 +25,10 @@ def handle_connection(connection, ctx):
             elif command == "EXEC":
                 if conn_state.multi:
                     # run exec
-                    pass
+                    response = cmd_exec(conn_state.cmd_q)
+                    conn_state.multi = False
+                    conn_state.cmd_q.clear()
+                    connection.sendall(response)
                 else:
                     connection.sendall(b"-ERR EXEC without MULTI\r\n")
             elif command == "DISCARD":
@@ -44,3 +47,10 @@ def handle_connection(connection, ctx):
                 connection.sendall(b"-ERR unknown command\r\n")
 
     connection.close()
+
+
+def cmd_exec(queue):
+    res = []
+    for cmd in queue:
+        pass
+    return encode(res, BARR)
