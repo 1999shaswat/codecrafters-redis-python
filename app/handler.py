@@ -61,7 +61,7 @@ def handle_connection(connection, ctx):
                     cmd_watch(parsed, conn_state, ctx)
                     connection.sendall(encode("OK", SSTR))
             elif command == "UNWATCH":
-                conn_state.cmd_q.clear()
+                conn_state.watching.clear()
                 connection.sendall(encode("OK", SSTR))
 
         elif conn_state.multi:  # commands other than MULTI EXEC DISCARD
