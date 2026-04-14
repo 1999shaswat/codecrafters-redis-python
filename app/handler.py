@@ -1,4 +1,4 @@
-from .resp import BARR, ESTR, SSTR, encode, parse
+from .resp import ESTR, SSTR, encode, parse
 from .commands import COMMAND_HANDLERS
 
 
@@ -6,9 +6,10 @@ class ConnState:
     def __init__(self):
         self.multi = False
         self.cmd_q = []
+        self.watcher = {}
 
 
-class ExecConnCollector:
+class MockConnection:
     def __init__(self):
         self.res = []  # could be array or directly string...
 
@@ -30,7 +31,7 @@ def handle_connection(connection, ctx):
 
         command = parsed[0].upper()
 
-        if command in ("MULTI", "EXEC", "DISCARD"):
+        if command in ("MULTI", "EXEC", "DISCARD", "WATCH"):
             if command == "MULTI":
                 conn_state.multi = True
                 connection.sendall(encode("OK", SSTR))
@@ -51,6 +52,9 @@ def handle_connection(connection, ctx):
                     connection.sendall(encode("OK", SSTR))
                 else:
                     connection.sendall(encode("DISCARD without MULTI", ESTR))
+            elif command == "WATCH":
+                cmd_watch(parsed, conn_state, ctx)
+                connection.sendall(encode("OK", SSTR))
         elif conn_state.multi:  # commands other than MULTI EXEC DISCARD
             conn_state.cmd_q.append(parsed)
             connection.sendall(b"+QUEUED\r\n")
@@ -66,8 +70,13 @@ def handle_connection(connection, ctx):
     connection.close()
 
 
+def cmd_watch(args, conn_state, ctx):
+    key = args[1]
+    conn_state.watcher[key] = ctx.store[key]
+
+
 def cmd_exec(queue, ctx):
-    respCollector = ExecConnCollector()
+    respCollector = MockConnection()
     for parsed in queue:
         command = parsed[0].upper()
         handler = COMMAND_HANDLERS.get(command)
