@@ -8,6 +8,18 @@ class ConnState:
         self.cmd_q = []
 
 
+class ExecConnCollector:
+    def __init__(self):
+        self.res = []  # could be array or directly string...
+
+    def sendall(self, response):
+        self.res.append(response)
+
+    def getresponse(self):
+        header = f"*{len(self.res)}\r\n".encode()
+        return header + b"".join(self.res)
+
+
 def handle_connection(connection, ctx):
     """Read commands from a single client connection until it closes."""
     conn_state = ConnState()
@@ -25,7 +37,7 @@ def handle_connection(connection, ctx):
             elif command == "EXEC":
                 if conn_state.multi:
                     # run exec
-                    response = cmd_exec(conn_state.cmd_q)
+                    response = cmd_exec(conn_state.cmd_q, ctx)
                     conn_state.multi = False
                     conn_state.cmd_q.clear()
                     connection.sendall(response)
@@ -35,7 +47,7 @@ def handle_connection(connection, ctx):
                 # handle discard
                 pass
         elif conn_state.multi:  # commands other than MULTI EXEC DISCARD
-            conn_state.cmd_q.append((parsed))
+            conn_state.cmd_q.append(parsed)
             connection.sendall(b"+QUEUED\r\n")
             continue
         else:
@@ -49,8 +61,15 @@ def handle_connection(connection, ctx):
     connection.close()
 
 
-def cmd_exec(queue):
-    res = []
-    for cmd in queue:
+def cmd_exec(queue, ctx):
+    respCollector = ExecConnCollector()
+    for parsed in queue:
+        command = parsed[0].upper()
+        handler = COMMAND_HANDLERS.get(command)
+        if handler:
+            handler(respCollector, parsed, ctx)
+        else:
+            respCollector.sendall(encode("unknown command", ESTR))
         pass
-    return encode(res, BARR)
+    # need to change encode to just to wrap array and not modify response
+    return respCollector.getresponse()
