@@ -45,7 +45,12 @@ def handle_connection(connection, ctx):
                     connection.sendall(encode("EXEC without MULTI", ESTR))
             elif command == "DISCARD":
                 # handle discard
-                pass
+                if conn_state.multi:
+                    conn_state.multi = False
+                    conn_state.cmd_q.clear()
+                    connection.sendall(encode("OK", SSTR))
+                else:
+                    connection.sendall(encode("DISCARD without MULTI", ESTR))
         elif conn_state.multi:  # commands other than MULTI EXEC DISCARD
             conn_state.cmd_q.append(parsed)
             connection.sendall(b"+QUEUED\r\n")
