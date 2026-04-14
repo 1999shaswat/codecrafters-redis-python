@@ -72,7 +72,7 @@ def handle_connection(connection, ctx):
 
 def cmd_watch(args, conn_state, ctx):
     key = args[1]
-    conn_state.watcher[key] = ctx.store[key]
+    conn_state.watcher[key] = ctx.store.get(key)
 
 
 def cmd_exec(queue, ctx):
