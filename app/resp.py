@@ -8,7 +8,7 @@ INTR = 4  # Integer        ":42\r\n"
 
 def encode(item, type):
     if type == ESTR:
-        return f"-{item}\r\n".encode()
+        return f"-ERR {item}\r\n".encode()
     elif type == SSTR:
         return f"+{item}\r\n".encode()
     elif type == BSTR:

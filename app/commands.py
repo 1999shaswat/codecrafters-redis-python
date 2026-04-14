@@ -223,7 +223,7 @@ def cmd_incr(connection, args, ctx):
     val = ctx.store.setdefault(args[1], 0)
     if isinstance(val, str):
         return connection.sendall(
-            encode("ERR value is not an integer or out of range", ESTR)
+            encode("value is not an integer or out of range", ESTR)
         )
     val += 1
     ctx.store[args[1]] = val

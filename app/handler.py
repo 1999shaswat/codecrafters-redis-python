@@ -1,4 +1,4 @@
-from .resp import BARR, encode, parse
+from .resp import BARR, ESTR, SSTR, encode, parse
 from .commands import COMMAND_HANDLERS
 
 
@@ -21,7 +21,7 @@ def handle_connection(connection, ctx):
         if command in ("MULTI", "EXEC", "DISCARD"):
             if command == "MULTI":
                 conn_state.multi = True
-                connection.sendall(b"+OK\r\n")
+                connection.sendall(encode("OK", SSTR))
             elif command == "EXEC":
                 if conn_state.multi:
                     # run exec
@@ -30,7 +30,7 @@ def handle_connection(connection, ctx):
                     conn_state.cmd_q.clear()
                     connection.sendall(response)
                 else:
-                    connection.sendall(b"-ERR EXEC without MULTI\r\n")
+                    connection.sendall(encode("EXEC without MULTI", ESTR))
             elif command == "DISCARD":
                 # handle discard
                 pass
