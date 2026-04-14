@@ -41,6 +41,7 @@ def handle_connection(connection, ctx):
                     response = cmd_exec(conn_state, ctx)
                     conn_state.multi = False
                     conn_state.cmd_q.clear()
+                    conn_state.watching.clear()
                     connection.sendall(response)
                 else:
                     connection.sendall(encode("EXEC without MULTI", ESTR))
@@ -49,7 +50,6 @@ def handle_connection(connection, ctx):
                 if conn_state.multi:
                     conn_state.multi = False
                     conn_state.cmd_q.clear()
-                    conn_state.watching.clear()
                     connection.sendall(encode("OK", SSTR))
                 else:
                     connection.sendall(encode("DISCARD without MULTI", ESTR))
