@@ -1,6 +1,7 @@
 import argparse
 import socket
 import threading
+import secrets
 
 from .handler import handle_connection
 
@@ -16,6 +17,8 @@ class Context:
         self.role = "master"
         self.masterHOST = None
         self.masterPORT = None
+        self.master_replid = None
+        self.master_repl_offset = 0
 
 
 def run():
@@ -33,6 +36,9 @@ def run():
         mhost, mport = args.replicaof.split(" ")
         ctx.masterHOST = mhost
         ctx.masterPORT = int(mport)
+
+    if ctx.role == "master":
+        ctx.master_replid = secrets.token_hex(20)
 
     with socket.create_server((HOST, PORT), reuse_port=True) as server:
         print(f"Server listening on {HOST}:{PORT}")

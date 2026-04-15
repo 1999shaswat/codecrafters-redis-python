@@ -1,6 +1,8 @@
 import threading
 from collections import deque
 
+from .server import Context
+
 from .resp import BARR, BSTR, ESTR, INTR, SSTR, encode
 from .utils import (
     autogenerate,
@@ -230,8 +232,12 @@ def cmd_incr(connection, args, ctx):
     connection.sendall(encode(val, INTR))
 
 
-def cmd_info(connection, args, ctx):
-    info = {"role": ctx.role}
+def cmd_info(connection, args, ctx: Context):
+    info = {
+        "role": ctx.role,
+        "master_replid": ctx.master_replid,
+        "master_repl_offset": ctx.master_repl_offset,
+    }
     res = "# Replication\r\n"
     res += "\r\n".join([f"{k}:{v}" for k, v in zip(info.keys(), info.values())])
     connection.sendall(encode(res, BSTR))
