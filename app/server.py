@@ -1,5 +1,6 @@
 import socket
 import threading
+import argparse
 
 from .handler import handle_connection
 
@@ -17,6 +18,13 @@ class Context:
 def run():
     """Start the TCP server and accept client connections."""
     ctx = Context()
+    parser = argparse.ArgumentParser(description="Server script")
+    parser.add_argument(
+        "--port", type=int, default=6379, help="Port number (default: 6379)"
+    )
+    args = parser.parse_args()
+    PORT = args.port
+
     with socket.create_server((HOST, PORT), reuse_port=True) as server:
         print(f"Server listening on {HOST}:{PORT}")
         while True:
