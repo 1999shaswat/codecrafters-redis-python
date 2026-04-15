@@ -13,6 +13,7 @@ class Context:
         self.store = {}
         self.waiters = {}
         self.lock = threading.Lock()
+        self.role = "master"
 
 
 def run():

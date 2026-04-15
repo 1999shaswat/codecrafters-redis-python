@@ -230,6 +230,12 @@ def cmd_incr(connection, args, ctx):
     connection.sendall(encode(val, INTR))
 
 
+def cmd_info(connection, args, ctx):
+    info = {"role": ctx.role}
+    res = "\n".join([f"{k}:{v}" for k, v in zip(info.keys(), info.values())])
+    connection.sendall(encode(res, BSTR))
+
+
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
 
 # Dispatch table: command name: handler function
@@ -249,4 +255,5 @@ COMMAND_HANDLERS = {
     "XRANGE": cmd_xrange,
     "XREAD": cmd_xread,
     "INCR": cmd_incr,
+    "INFO": cmd_info,
 }
