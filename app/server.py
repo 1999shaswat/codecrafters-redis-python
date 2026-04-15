@@ -1,6 +1,6 @@
+import argparse
 import socket
 import threading
-import argparse
 
 from .handler import handle_connection
 
