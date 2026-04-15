@@ -232,7 +232,8 @@ def cmd_incr(connection, args, ctx):
 
 def cmd_info(connection, args, ctx):
     info = {"role": ctx.role}
-    res = "\n".join([f"{k}:{v}" for k, v in zip(info.keys(), info.values())])
+    res = "# Replication\r\n"
+    res += "\r\n".join([f"{k}:{v}" for k, v in zip(info.keys(), info.values())])
     connection.sendall(encode(res, BSTR))
 
 
