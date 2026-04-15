@@ -40,6 +40,14 @@ def run():
     if ctx.role == "master":
         ctx.master_replid = secrets.token_hex(20)
 
+    if ctx.role == "slave":
+        slavethread = threading.Thread(
+            target=initalize_slave,
+            args=(ctx,),
+        )
+        slavethread.daemon = True
+        slavethread.start()
+
     with socket.create_server((HOST, PORT), reuse_port=True) as server:
         print(f"Server listening on {HOST}:{PORT}")
         while True:
@@ -54,3 +62,9 @@ def run():
             )
             thread.daemon = True
             thread.start()
+
+
+def initalize_slave(ctx):
+    master_sock = socket.create_connection((ctx.masterHOST, ctx.masterPORT))
+    master_sock.sendall(b"*1\r\n$4\r\nPING\r\n")
+    response = master_sock.recv(1024)
