@@ -49,15 +49,18 @@ def handle_connection(connection, ctx):
 
         command = parsed[0].upper()
 
-        print(ctx.role, command)
-
-        if ctx.role == "master" and command in WRITE_CMDS:
-            print("sent to all replicas")
-            for replica in ctx.replicas:
-                replica.sendall(data)
+        # print(ctx.role, command)
 
         # Dont send response (to master) on write commands
-        if ctx.role == "replica" and command in WRITE_CMDS:
+        if ctx.role == "master" and command in {
+            "SET",
+            "RPUSH",
+            "LPUSH",
+            "LPOP",
+            "BLPOP",
+            "XADD",
+            "INCR",
+        }:
             connection = mockReplicaConnection
         else:
             connection = clientConnection
@@ -109,7 +112,20 @@ def handle_connection(connection, ctx):
             else:
                 connection.sendall(encode("unknown command", ESTR))
 
-        print(ctx.role, ctx.store)
+        if ctx.role == "master" and command in {
+            "SET",
+            "RPUSH",
+            "LPUSH",
+            "LPOP",
+            "BLPOP",
+            "XADD",
+            "INCR",
+        }:
+            # print("sent to all replicas")
+            for replica in ctx.replicas:
+                replica.sendall(data)
+
+        # print(ctx.role, ctx.store)
 
     clientConnection.close()
 
