@@ -10,16 +10,24 @@ from .handler import handle_connection
 
 class Context:
     def __init__(self):
+        # Server network address
         self.host = "localhost"
         self.port = 6379
+
         self.store = {}
         self.waiters = {}
         self.lock = threading.Lock()
         self.role = "master"
+
+        # Replicas use this to connect to master
         self.masterHOST = ""
         self.masterPORT = 0
+        self.master_sock = None
+
+        # Used to track and sync state
         self.master_replid = "?"
         self.master_repl_offset = -1
+        self.replicas = []
 
 
 def run():
@@ -68,20 +76,20 @@ def run():
 
 
 def initalize_slave(ctx):
-    master_sock = socket.create_connection((ctx.masterHOST, ctx.masterPORT))
+    ctx.master_sock = socket.create_connection((ctx.masterHOST, ctx.masterPORT))
     # master_sock.sendall(b"*1\r\n$4\r\nPING\r\n")
-    master_sock.sendall(encode(["PING"], BARR))
-    _response = master_sock.recv(1024)
+    ctx.master_sock.sendall(encode(["PING"], BARR))
+    _response = ctx.master_sock.recv(1024)
     # print(response)
-    master_sock.sendall(encode(["REPLCONF", "listening-port", str(ctx.port)], BARR))
-    _response = master_sock.recv(1024)
-    master_sock.sendall(encode(["REPLCONF", "capa", "psync2"], BARR))
-    _response = master_sock.recv(1024)
-    master_sock.sendall(
+    ctx.master_sock.sendall(encode(["REPLCONF", "listening-port", str(ctx.port)], BARR))
+    _response = ctx.master_sock.recv(1024)
+    ctx.master_sock.sendall(encode(["REPLCONF", "capa", "psync2"], BARR))
+    _response = ctx.master_sock.recv(1024)
+    ctx.master_sock.sendall(
         encode(
             ["PSYNC", ctx.master_replid, str(ctx.master_repl_offset)],
             BARR,
         )
     )
-    _response = master_sock.recv(1024)
-    rdb = master_sock.recv(1024)
+    _response = ctx.master_sock.recv(1024)
+    rdb = ctx.master_sock.recv(1024)

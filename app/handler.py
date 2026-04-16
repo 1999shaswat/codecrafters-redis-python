@@ -31,7 +31,7 @@ def handle_connection(connection, ctx):
 
         command = parsed[0].upper()
 
-        if command in ("MULTI", "EXEC", "DISCARD", "WATCH", "UNWATCH"):
+        if command in {"MULTI", "EXEC", "DISCARD", "WATCH", "UNWATCH"}:
             if command == "MULTI":
                 conn_state.multi = True
                 connection.sendall(encode("OK", SSTR))
@@ -77,6 +77,10 @@ def handle_connection(connection, ctx):
                 handler(connection, parsed, ctx)
             else:
                 connection.sendall(encode("unknown command", ESTR))
+
+        if command in {"SET", "RPUSH", "LPUSH", "LPOP", "BLPOP", "XADD", "INCR"}:
+            for replica in ctx.replicas:
+                replica.sendall(data)
 
     connection.close()
 
