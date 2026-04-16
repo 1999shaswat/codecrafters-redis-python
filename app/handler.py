@@ -106,7 +106,7 @@ def handle_connection(connection, ctx):
             for replica in ctx.replicas:
                 replica.sendall(data)
 
-        print(ctx)
+        print(ctx.role, ctx.store)
 
     clientConnection.close()
 
