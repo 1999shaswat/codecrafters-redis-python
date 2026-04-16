@@ -89,6 +89,7 @@ def handle_connection(connection, ctx):
         }:
             for replica in ctx.replicas:
                 replica.sendall(data)
+                _response = replica.recv(1024)
 
     connection.close()
 
