@@ -6,15 +6,12 @@ import secrets
 from .resp import BARR, encode
 
 from .handler import handle_connection
-from app import resp
 
 
 class Context:
     def __init__(self):
         self.host = "localhost"
         self.port = 6379
-        self.replid = ""
-        self.offset = 0
         self.store = {}
         self.waiters = {}
         self.lock = threading.Lock()
@@ -43,7 +40,8 @@ def run():
         ctx.masterPORT = int(mport)
 
     if ctx.role == "master":
-        ctx.replid = secrets.token_hex(20)
+        ctx.master_replid = secrets.token_hex(20)
+        ctx.master_repl_offset = 0
 
     if ctx.role == "slave":
         slavethread = threading.Thread(
@@ -86,4 +84,3 @@ def initalize_slave(ctx):
         )
     )
     _response = master_sock.recv(1024)
-
