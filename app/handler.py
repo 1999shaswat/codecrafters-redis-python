@@ -1,6 +1,16 @@
 from .resp import BARR, ESTR, SSTR, encode, parse
 from .commands import COMMAND_HANDLERS
 
+WRITE_CMDS = {
+    "SET",
+    "RPUSH",
+    "LPUSH",
+    "LPOP",
+    "BLPOP",
+    "XADD",
+    "INCR",
+}
+
 
 class ConnState:
     def __init__(self):
@@ -21,15 +31,29 @@ class MockConnection:
         return header + b"".join(self.res)
 
 
+class MockReplicaConnection:
+    def sendall(self, _response):
+        pass
+
+
 def handle_connection(connection, ctx):
     """Read commands from a single client connection until it closes."""
     conn_state = ConnState()
-    while data := connection.recv(1024):
+    mockReplicaConnection = MockReplicaConnection()
+    clientConnection = connection
+
+    while data := clientConnection.recv(1024):
         parsed = parse(data)
         if not parsed:
             continue
 
         command = parsed[0].upper()
+
+        # Dont send response (to master) on write commands
+        if ctx.role == "replica" and command in WRITE_CMDS:
+            connection = mockReplicaConnection
+        else:
+            connection = clientConnection
 
         if command in {"MULTI", "EXEC", "DISCARD", "WATCH", "UNWATCH"}:
             if command == "MULTI":
@@ -78,19 +102,11 @@ def handle_connection(connection, ctx):
             else:
                 connection.sendall(encode("unknown command", ESTR))
 
-        if ctx.role == "master" and command in {
-            "SET",
-            "RPUSH",
-            "LPUSH",
-            "LPOP",
-            "BLPOP",
-            "XADD",
-            "INCR",
-        }:
+        if ctx.role == "master" and command in WRITE_CMDS:
             for replica in ctx.replicas:
                 replica.sendall(data)
 
-    connection.close()
+    clientConnection.close()
 
 
 def cmd_watch(args, conn_state, ctx):
