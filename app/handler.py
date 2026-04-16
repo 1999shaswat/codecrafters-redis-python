@@ -50,10 +50,10 @@ def handle_connection(connection, ctx):
         command = parsed[0].upper()
 
         # Dont send response (to master) on write commands
-        if ctx.role == "replica" and command in WRITE_CMDS:
-            connection = mockReplicaConnection
-        else:
-            connection = clientConnection
+        # if ctx.role == "replica" and command in WRITE_CMDS:
+        #     connection = mockReplicaConnection
+        # else:
+        #     connection = clientConnection
 
         if command in {"MULTI", "EXEC", "DISCARD", "WATCH", "UNWATCH"}:
             if command == "MULTI":
