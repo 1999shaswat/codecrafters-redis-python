@@ -49,6 +49,8 @@ def handle_connection(connection, ctx):
 
         command = parsed[0].upper()
 
+        print(ctx.role, command)
+
         # Dont send response (to master) on write commands
         if ctx.role == "replica" and command in WRITE_CMDS:
             connection = mockReplicaConnection
