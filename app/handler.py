@@ -52,7 +52,7 @@ def handle_connection(connection, ctx):
         # print(ctx.role, command)
 
         # Dont send response (to master) on write commands
-        if ctx.role == "master" and command in {
+        if ctx.role == "replica" and command in {
             "SET",
             "RPUSH",
             "LPUSH",
