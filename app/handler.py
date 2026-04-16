@@ -103,6 +103,7 @@ def handle_connection(connection, ctx):
                 connection.sendall(encode("unknown command", ESTR))
 
         if ctx.role == "master" and command in WRITE_CMDS:
+            print("sent to all replicas")
             for replica in ctx.replicas:
                 replica.sendall(data)
 

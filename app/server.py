@@ -42,7 +42,7 @@ def run():
     ctx.port = args.port
 
     if args.replicaof:
-        ctx.role = "slave"
+        ctx.role = "replica"
         mhost, mport = args.replicaof.split(" ")
         ctx.masterHOST = mhost
         ctx.masterPORT = int(mport)
@@ -51,13 +51,13 @@ def run():
         ctx.master_replid = secrets.token_hex(20)
         ctx.master_repl_offset = 0
 
-    if ctx.role == "slave":
-        slavethread = threading.Thread(
-            target=initalize_slave,
+    if ctx.role == "replica":
+        replicathread = threading.Thread(
+            target=initalize_replica,
             args=(ctx,),
         )
-        slavethread.daemon = True
-        slavethread.start()
+        replicathread.daemon = True
+        replicathread.start()
 
     with socket.create_server((ctx.host, ctx.port), reuse_port=True) as server:
         print(f"Server {ctx.role} listening on {ctx.host}:{ctx.port}")
@@ -75,7 +75,7 @@ def run():
             thread.start()
 
 
-def initalize_slave(ctx):
+def initalize_replica(ctx):
     ctx.master_sock = socket.create_connection((ctx.masterHOST, ctx.masterPORT))
     # master_sock.sendall(b"*1\r\n$4\r\nPING\r\n")
     ctx.master_sock.sendall(encode(["PING"], BARR))
