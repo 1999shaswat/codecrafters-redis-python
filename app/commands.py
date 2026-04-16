@@ -245,6 +245,12 @@ def cmd_replconf(connection, args, ctx):
     connection.sendall(encode("OK", SSTR))
 
 
+def cmd_psync(connection, args, ctx):
+    connection.sendall(
+        encode(["+FULLRESYNC", ctx.master_replid, str(ctx.master_repl_offset)], BARR)
+    )
+
+
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
 
 # Dispatch table: command name: handler function
@@ -266,4 +272,5 @@ COMMAND_HANDLERS = {
     "INCR": cmd_incr,
     "INFO": cmd_info,
     "REPLCONF": cmd_replconf,
+    "PSYNC": cmd_psync,
 }
