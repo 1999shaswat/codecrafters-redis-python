@@ -84,3 +84,4 @@ def initalize_slave(ctx):
         )
     )
     _response = master_sock.recv(1024)
+    rdb = master_sock.recv(1024)

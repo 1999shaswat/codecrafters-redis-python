@@ -1,7 +1,7 @@
 import threading
 from collections import deque
 
-from .resp import BARR, BSTR, ESTR, INTR, SSTR, encode
+from .resp import BARR, BSTR, ESTR, INTR, SSTR, encode, rdb_encode
 from .utils import (
     autogenerate,
     bsearch_lower,
@@ -249,6 +249,7 @@ def cmd_psync(connection, args, ctx):
     connection.sendall(
         encode(f"FULLRESYNC {ctx.master_replid} {str(ctx.master_repl_offset)}", SSTR)
     )
+    connection.sendall(rdb_encode(ctx.store))
 
 
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}

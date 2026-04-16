@@ -32,6 +32,12 @@ def encode(item, type):
     return b"$-1\r\n"
 
 
+def rdb_encode(store):
+    rdb = bytes.fromhex("524544495330303131...")
+    header = f"${len(rdb)}\r\n".encode()
+    return header + rdb
+
+
 def parse(raw_bytes):
     parts = raw_bytes.split(b"\r\n")
     return _parse_parts(parts)
