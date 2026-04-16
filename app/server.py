@@ -13,14 +13,16 @@ class Context:
     def __init__(self):
         self.host = "localhost"
         self.port = 6379
+        self.replid = ""
+        self.offset = 0
         self.store = {}
         self.waiters = {}
         self.lock = threading.Lock()
         self.role = "master"
         self.masterHOST = ""
         self.masterPORT = 0
-        self.master_replid = ""
-        self.master_repl_offset = 0
+        self.master_replid = "?"
+        self.master_repl_offset = -1
 
 
 def run():
@@ -41,7 +43,7 @@ def run():
         ctx.masterPORT = int(mport)
 
     if ctx.role == "master":
-        ctx.master_replid = secrets.token_hex(20)
+        ctx.replid = secrets.token_hex(20)
 
     if ctx.role == "slave":
         slavethread = threading.Thread(
@@ -71,9 +73,17 @@ def initalize_slave(ctx):
     master_sock = socket.create_connection((ctx.masterHOST, ctx.masterPORT))
     # master_sock.sendall(b"*1\r\n$4\r\nPING\r\n")
     master_sock.sendall(encode(["PING"], BARR))
-    response = master_sock.recv(1024)
+    _response = master_sock.recv(1024)
     # print(response)
     master_sock.sendall(encode(["REPLCONF", "listening-port", str(ctx.port)], BARR))
-    response = master_sock.recv(1024)
+    _response = master_sock.recv(1024)
     master_sock.sendall(encode(["REPLCONF", "capa", "psync2"], BARR))
-    response = master_sock.recv(1024)
+    _response = master_sock.recv(1024)
+    master_sock.sendall(
+        encode(
+            ["PSYNC", ctx.master_replid, str(ctx.master_repl_offset)],
+            BARR,
+        )
+    )
+    _response = master_sock.recv(1024)
+
