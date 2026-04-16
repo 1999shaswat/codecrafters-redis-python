@@ -70,8 +70,8 @@ def run():
 def initalize_slave(ctx):
     master_sock = socket.create_connection((ctx.masterHOST, ctx.masterPORT))
     # master_sock.sendall(b"*1\r\n$4\r\nPING\r\n")
+    master_sock.sendall(encode(["PING"], BARR))
     # response = master_sock.recv(1024)
     # print(response)
-    master_sock.sendall(encode(["PING"], BARR))
     master_sock.sendall(encode(["REPLCONF", "listening-port", str(ctx.port)], BARR))
     master_sock.sendall(encode(["REPLCONF", "capa", "psync2"], BARR))
