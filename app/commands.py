@@ -241,6 +241,10 @@ def cmd_info(connection, args, ctx):
     connection.sendall(encode(res, BSTR))
 
 
+def cmd_replconf(connection, args, ctx):
+    connection.sendall(encode("OK", SSTR))
+
+
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
 
 # Dispatch table: command name: handler function
@@ -261,4 +265,5 @@ COMMAND_HANDLERS = {
     "XREAD": cmd_xread,
     "INCR": cmd_incr,
     "INFO": cmd_info,
+    "REPLCONF": cmd_replconf,
 }

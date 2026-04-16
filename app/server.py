@@ -3,21 +3,23 @@ import socket
 import threading
 import secrets
 
-from .handler import handle_connection
+from .resp import BARR, encode
 
-HOST = "localhost"
-PORT = 6379
+from .handler import handle_connection
+from app import resp
 
 
 class Context:
     def __init__(self):
+        self.host = "localhost"
+        self.port = 6379
         self.store = {}
         self.waiters = {}
         self.lock = threading.Lock()
         self.role = "master"
-        self.masterHOST = None
-        self.masterPORT = None
-        self.master_replid = None
+        self.masterHOST = ""
+        self.masterPORT = 0
+        self.master_replid = ""
         self.master_repl_offset = 0
 
 
@@ -30,7 +32,8 @@ def run():
     )
     parser.add_argument("--replicaof", help="Start replica server")
     args = parser.parse_args()
-    PORT = args.port
+    ctx.port = args.port
+
     if args.replicaof:
         ctx.role = "slave"
         mhost, mport = args.replicaof.split(" ")
@@ -48,8 +51,8 @@ def run():
         slavethread.daemon = True
         slavethread.start()
 
-    with socket.create_server((HOST, PORT), reuse_port=True) as server:
-        print(f"Server listening on {HOST}:{PORT}")
+    with socket.create_server((ctx.host, ctx.port), reuse_port=True) as server:
+        print(f"Server {ctx.role} listening on {ctx.host}:{ctx.port}")
         while True:
             connection, address = server.accept()
             print(f"New connection from {address}")
@@ -66,5 +69,9 @@ def run():
 
 def initalize_slave(ctx):
     master_sock = socket.create_connection((ctx.masterHOST, ctx.masterPORT))
-    master_sock.sendall(b"*1\r\n$4\r\nPING\r\n")
-    response = master_sock.recv(1024)
+    # master_sock.sendall(b"*1\r\n$4\r\nPING\r\n")
+    # response = master_sock.recv(1024)
+    # print(response)
+    master_sock.sendall(encode(["PING"], BARR))
+    master_sock.sendall(encode(["REPLCONF", "listening-port", str(ctx.port)], BARR))
+    master_sock.sendall(encode(["REPLCONF", "capa", "psync2"], BARR))
