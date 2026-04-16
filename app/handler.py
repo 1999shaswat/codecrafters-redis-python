@@ -78,7 +78,15 @@ def handle_connection(connection, ctx):
             else:
                 connection.sendall(encode("unknown command", ESTR))
 
-        if command in {"SET", "RPUSH", "LPUSH", "LPOP", "BLPOP", "XADD", "INCR"}:
+        if ctx.role == "master" and command in {
+            "SET",
+            "RPUSH",
+            "LPUSH",
+            "LPOP",
+            "BLPOP",
+            "XADD",
+            "INCR",
+        }:
             for replica in ctx.replicas:
                 replica.sendall(data)
 
