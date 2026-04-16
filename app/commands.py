@@ -242,11 +242,11 @@ def cmd_info(connection, args, ctx):
 
 
 def cmd_replconf(connection, args, ctx):
-    ctx.replicas.append(connection)
     connection.sendall(encode("OK", SSTR))
 
 
 def cmd_psync(connection, args, ctx):
+    ctx.replicas.append(connection)
     connection.sendall(
         encode(f"FULLRESYNC {ctx.master_replid} {str(ctx.master_repl_offset)}", SSTR)
     )
