@@ -93,3 +93,4 @@ def initalize_replica(ctx):
     )
     _response = ctx.master_sock.recv(1024)
     rdb = ctx.master_sock.recv(1024)
+    handle_connection(ctx.master_sock, ctx)

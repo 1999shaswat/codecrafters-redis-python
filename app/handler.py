@@ -31,13 +31,15 @@ class MockConnection:
         return header + b"".join(self.res)
 
 
+# """Used by replicas to not send response to master (for write cmds)"""
 class MockReplicaConnection:
     def sendall(self, _response):
         pass
 
 
 def handle_connection(connection, ctx):
-    """Read commands from a single client connection until it closes."""
+    """1. Read commands from a single client connection until it closes."""
+    """2. Read commands from a master as replica."""
     conn_state = ConnState()
     mockReplicaConnection = MockReplicaConnection()
     clientConnection = connection
@@ -49,23 +51,18 @@ def handle_connection(connection, ctx):
 
         command = parsed[0].upper()
 
-        # print(ctx.role, command)
-
         # Dont send response (to master) on write commands
-        if ctx.role == "replica" and command in {
-            "SET",
-            "RPUSH",
-            "LPUSH",
-            "LPOP",
-            "BLPOP",
-            "XADD",
-            "INCR",
-        }:
+        if (
+            ctx.role == "replica"
+            and connection is ctx.master_sock
+            and command in WRITE_CMDS
+        ):
             connection = mockReplicaConnection
         else:
             connection = clientConnection
 
         if command in {"MULTI", "EXEC", "DISCARD", "WATCH", "UNWATCH"}:
+            # master never sends above to replica
             if command == "MULTI":
                 conn_state.multi = True
                 connection.sendall(encode("OK", SSTR))
@@ -100,32 +97,33 @@ def handle_connection(connection, ctx):
                 conn_state.watching.clear()
                 connection.sendall(encode("OK", SSTR))
 
-        elif conn_state.multi:  # commands other than MULTI EXEC DISCARD
+        elif conn_state.multi:
+            # commands other than MULTI EXEC DISCARD, never used in Replicas
             conn_state.cmd_q.append(parsed)
             connection.sendall(b"+QUEUED\r\n")
             continue
         else:
-            handler = COMMAND_HANDLERS.get(command)
+            # Reject write commands from client in replicas
+            if (
+                ctx.role == "replica"
+                and connection is not ctx.master_sock
+                and command in WRITE_CMDS
+            ):
+                connection.sendall(
+                    encode("READONLY You can't write against a read only replica", ESTR)
+                )
+                continue
 
+            handler = COMMAND_HANDLERS.get(command)
             if handler:
                 handler(connection, parsed, ctx)
             else:
                 connection.sendall(encode("unknown command", ESTR))
 
-        if ctx.role == "master" and command in {
-            "SET",
-            "RPUSH",
-            "LPUSH",
-            "LPOP",
-            "BLPOP",
-            "XADD",
-            "INCR",
-        }:
-            # print("sent to all replicas")
+        if ctx.role == "master" and command in WRITE_CMDS:
+            print("sent to all replicas")
             for replica in ctx.replicas:
                 replica.sendall(data)
-
-        # print(ctx.role, ctx.store)
 
     clientConnection.close()
 
