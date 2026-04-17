@@ -54,7 +54,7 @@ def handle_connection(connection, ctx):
         # Dont send response (to master) on write commands
         if (
             ctx.role == "replica"
-            and connection is ctx.master_sock
+            and clientConnection is ctx.master_sock
             and command in WRITE_CMDS
         ):
             connection = mockReplicaConnection
@@ -106,7 +106,7 @@ def handle_connection(connection, ctx):
             # Reject write commands from client in replicas
             if (
                 ctx.role == "replica"
-                and connection is not ctx.master_sock
+                and clientConnection is not ctx.master_sock
                 and command in WRITE_CMDS
             ):
                 connection.sendall(
@@ -124,6 +124,8 @@ def handle_connection(connection, ctx):
             print("sent to all replicas")
             for replica in ctx.replicas:
                 replica.sendall(data)
+
+        print(ctx.store)
 
     clientConnection.close()
 
