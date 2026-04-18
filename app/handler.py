@@ -45,87 +45,92 @@ def handle_connection(connection, ctx):
     clientConnection = connection
 
     while data := clientConnection.recv(1024):
-        parsed = parse(data)
-        if not parsed:
+        parsed_list = parse(data)
+        if not parsed_list:
             continue
 
-        command = parsed[0].upper()
+        for parsed in parsed_list:
+            if not parsed_list:
+                continue
+            command = parsed[0].upper()
 
-        # Dont send response (to master) on write commands
-        if (
-            ctx.role == "replica"
-            and clientConnection is ctx.master_sock
-            and command in WRITE_CMDS
-        ):
-            connection = mockReplicaConnection
-        else:
-            connection = clientConnection
-
-        if command in {"MULTI", "EXEC", "DISCARD", "WATCH", "UNWATCH"}:
-            # master never sends above to replica
-            if command == "MULTI":
-                conn_state.multi = True
-                connection.sendall(encode("OK", SSTR))
-            elif command == "EXEC":
-                if conn_state.multi:
-                    # run exec
-                    response = cmd_exec(conn_state, ctx)
-                    conn_state.multi = False
-                    conn_state.cmd_q.clear()
-                    conn_state.watching.clear()
-                    connection.sendall(response)
-                else:
-                    connection.sendall(encode("EXEC without MULTI", ESTR))
-            elif command == "DISCARD":
-                # handle discard
-                if conn_state.multi:
-                    conn_state.multi = False
-                    conn_state.cmd_q.clear()
-                    conn_state.watching.clear()
-                    connection.sendall(encode("OK", SSTR))
-                else:
-                    connection.sendall(encode("DISCARD without MULTI", ESTR))
-            elif command == "WATCH":
-                if conn_state.multi:
-                    connection.sendall(
-                        encode("WATCH inside MULTI is not allowed", ESTR)
-                    )
-                else:
-                    cmd_watch(parsed, conn_state, ctx)
-                    connection.sendall(encode("OK", SSTR))
-            elif command == "UNWATCH":
-                conn_state.watching.clear()
-                connection.sendall(encode("OK", SSTR))
-
-        elif conn_state.multi:
-            # commands other than MULTI EXEC DISCARD, never used in Replicas
-            conn_state.cmd_q.append(parsed)
-            connection.sendall(b"+QUEUED\r\n")
-            continue
-        else:
-            # Reject write commands from client in replicas
+            # Dont send response (to master) on write commands
             if (
                 ctx.role == "replica"
-                and clientConnection is not ctx.master_sock
+                and clientConnection is ctx.master_sock
                 and command in WRITE_CMDS
             ):
-                connection.sendall(
-                    encode("READONLY You can't write against a read only replica", ESTR)
-                )
-                continue
-
-            handler = COMMAND_HANDLERS.get(command)
-            if handler:
-                handler(connection, parsed, ctx)
+                connection = mockReplicaConnection
             else:
-                connection.sendall(encode("unknown command", ESTR))
+                connection = clientConnection
 
-        if ctx.role == "master" and command in WRITE_CMDS:
-            print("sent to all replicas")
-            for replica in ctx.replicas:
-                replica.sendall(data)
+            if command in {"MULTI", "EXEC", "DISCARD", "WATCH", "UNWATCH"}:
+                # master never sends above to replica
+                if command == "MULTI":
+                    conn_state.multi = True
+                    connection.sendall(encode("OK", SSTR))
+                elif command == "EXEC":
+                    if conn_state.multi:
+                        # run exec
+                        response = cmd_exec(conn_state, ctx)
+                        conn_state.multi = False
+                        conn_state.cmd_q.clear()
+                        conn_state.watching.clear()
+                        connection.sendall(response)
+                    else:
+                        connection.sendall(encode("EXEC without MULTI", ESTR))
+                elif command == "DISCARD":
+                    # handle discard
+                    if conn_state.multi:
+                        conn_state.multi = False
+                        conn_state.cmd_q.clear()
+                        conn_state.watching.clear()
+                        connection.sendall(encode("OK", SSTR))
+                    else:
+                        connection.sendall(encode("DISCARD without MULTI", ESTR))
+                elif command == "WATCH":
+                    if conn_state.multi:
+                        connection.sendall(
+                            encode("WATCH inside MULTI is not allowed", ESTR)
+                        )
+                    else:
+                        cmd_watch(parsed, conn_state, ctx)
+                        connection.sendall(encode("OK", SSTR))
+                elif command == "UNWATCH":
+                    conn_state.watching.clear()
+                    connection.sendall(encode("OK", SSTR))
 
-        print(ctx.role, ctx.store)
+            elif conn_state.multi:
+                # commands other than MULTI EXEC DISCARD, never used in Replicas
+                conn_state.cmd_q.append(parsed)
+                connection.sendall(b"+QUEUED\r\n")
+                continue
+            else:
+                # Reject write commands from client in replicas
+                if (
+                    ctx.role == "replica"
+                    and clientConnection is not ctx.master_sock
+                    and command in WRITE_CMDS
+                ):
+                    connection.sendall(
+                        encode(
+                            "READONLY You can't write against a read only replica", ESTR
+                        )
+                    )
+                    continue
+
+                handler = COMMAND_HANDLERS.get(command)
+                if handler:
+                    handler(connection, parsed, ctx)
+                else:
+                    connection.sendall(encode("unknown command", ESTR))
+
+            if ctx.role == "master" and command in WRITE_CMDS:
+                print("sent to all replicas")
+                for replica in ctx.replicas:
+                    replica.sendall(data)
+
+            print(ctx.role, ctx.store)
 
     clientConnection.close()
 
