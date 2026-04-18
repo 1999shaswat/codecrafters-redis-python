@@ -246,7 +246,7 @@ def cmd_replconf(connection, args, ctx):
 
 
 def cmd_psync(connection, args, ctx):
-    ctx.replicas.append(connection)
+    ctx.slaves.append(connection)
     connection.sendall(
         encode(f"FULLRESYNC {ctx.master_replid} {str(ctx.master_repl_offset)}", SSTR)
     )

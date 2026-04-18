@@ -19,7 +19,7 @@ class Context:
         self.lock = threading.Lock()
         self.role = "master"
 
-        # Replicas use this to connect to master
+        # Slaves use this to connect to master
         self.masterHOST = ""
         self.masterPORT = 0
         self.master_sock = None
@@ -27,7 +27,7 @@ class Context:
         # Used to track and sync state
         self.master_replid = "?"
         self.master_repl_offset = -1
-        self.replicas = []
+        self.slaves = []
 
 
 def run():
@@ -42,7 +42,7 @@ def run():
     ctx.port = args.port
 
     if args.replicaof:
-        ctx.role = "replica"
+        ctx.role = "slave"
         mhost, mport = args.replicaof.split(" ")
         ctx.masterHOST = mhost
         ctx.masterPORT = int(mport)
@@ -51,13 +51,13 @@ def run():
         ctx.master_replid = secrets.token_hex(20)
         ctx.master_repl_offset = 0
 
-    if ctx.role == "replica":
-        replicathread = threading.Thread(
-            target=initalize_replica,
+    if ctx.role == "slave":
+        slavethread = threading.Thread(
+            target=initalize_slave,
             args=(ctx,),
         )
-        replicathread.daemon = True
-        replicathread.start()
+        slavethread.daemon = True
+        slavethread.start()
 
     with socket.create_server((ctx.host, ctx.port), reuse_port=True) as server:
         print(f"Server {ctx.role} listening on {ctx.host}:{ctx.port}")
@@ -75,7 +75,7 @@ def run():
             thread.start()
 
 
-def initalize_replica(ctx):
+def initalize_slave(ctx):
     ctx.master_sock = socket.create_connection((ctx.masterHOST, ctx.masterPORT))
     # master_sock.sendall(b"*1\r\n$4\r\nPING\r\n")
     ctx.master_sock.sendall(encode(["PING"], BARR))
