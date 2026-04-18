@@ -50,6 +50,7 @@ def handle_connection(connection, ctx):
             continue
 
         for parsed in parsed_list:
+            print(parsed, ctx.role, ctx.master_repl_offset)
             if not parsed:
                 continue
             command = parsed[0].upper()
