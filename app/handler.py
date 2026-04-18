@@ -50,7 +50,7 @@ def handle_connection(connection, ctx):
             continue
 
         for parsed in parsed_list:
-            print(parsed, ctx.role, ctx.master_repl_offset)
+            # print(parsed, ctx.role, ctx.master_repl_offset)
             if not parsed:
                 continue
             command = parsed[0].upper()
@@ -133,8 +133,6 @@ def handle_connection(connection, ctx):
                 ctx.master_repl_offset += len(data)
                 for slave in ctx.slaves:
                     slave.sendall(data)
-
-            
 
             # print(ctx.role, ctx.store)
 
