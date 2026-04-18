@@ -42,23 +42,35 @@ def rdb_encode(store):
 
 def parse(raw_bytes):
     parts = raw_bytes.split(b"\r\n")
-    return _parse_parts(parts)
+    # print(parts)
+    res = []
+    bookmark = 0
+    while bookmark < len(parts):
+        if parts[bookmark] == b"":
+            bookmark += 1
+            continue
+        val, incr = _parse_parts(parts, bookmark)
+        res.append(val)
+        bookmark += incr
+    return res
 
 
-def _parse_parts(tlist):
-    if not tlist or not tlist[0]:
+def _parse_parts(tlist, st):
+    # print(tlist[st])
+    if not tlist or not tlist[st]:
         return []
-    first = tlist[0][0]
+    first = tlist[st][0]
     if first == ord("+"):
-        return tlist[0][1:].decode()
+        return (tlist[st][1:].decode(), 1)
     elif first == ord("$"):
-        return tlist[1].decode()
+        return (tlist[st + 1].decode(), 2)
     elif first == ord("*"):
-        count = int(tlist[0][1:].decode())
+        count = int(tlist[st][1:].decode())
         result = []
         cursor = 1
         for _ in range(count):
-            result.append(_parse_parts(tlist[cursor : cursor + 2]))
-            cursor += 2
-        return result
+            val, incr = _parse_parts(tlist, st + cursor)
+            result.append(val)
+            cursor += incr
+        return result, cursor
     return []
