@@ -50,7 +50,7 @@ def handle_connection(connection, ctx):
             continue
 
         for parsed in parsed_list:
-            # print(parsed, ctx.role, ctx.master_repl_offset)
+            print(parsed, ctx.role, ctx.master_repl_offset)
             if not parsed:
                 continue
             command = parsed[0].upper()
@@ -127,10 +127,11 @@ def handle_connection(connection, ctx):
                 handler = COMMAND_HANDLERS.get(command)
                 if handler:
                     handler(connection, parsed, ctx)
-                    if ctx.role == "slave" and clientConnection is ctx.master_sock:
-                        ctx.master_repl_offset += len(encode(parsed, BARR))
                 else:
                     connection.sendall(encode("unknown command", ESTR))
+
+            if ctx.role == "slave" and clientConnection is ctx.master_sock:
+                ctx.master_repl_offset += len(encode(parsed, BARR))
 
             if ctx.role == "master" and command in WRITE_CMDS:
                 # print("sent to all slaves")
@@ -162,6 +163,5 @@ def cmd_exec(conn_state, ctx):
             handler(respCollector, parsed, ctx)
         else:
             respCollector.sendall(encode("unknown command", ESTR))
-        pass
     # need to change encode to just to wrap array and not modify response
     return respCollector.getresponse()
