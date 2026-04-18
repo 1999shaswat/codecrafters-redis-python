@@ -50,7 +50,7 @@ def handle_connection(connection, ctx):
             continue
 
         for parsed in parsed_list:
-            if not parsed_list:
+            if not parsed:
                 continue
             command = parsed[0].upper()
 
@@ -126,7 +126,7 @@ def handle_connection(connection, ctx):
                     connection.sendall(encode("unknown command", ESTR))
 
             if ctx.role == "slave" and clientConnection is ctx.master_sock:
-                ctx.master_repl_offset += len(data)
+                ctx.master_repl_offset += len(encode(parsed, BARR))
 
             if ctx.role == "master" and command in WRITE_CMDS:
                 # print("sent to all slaves")
