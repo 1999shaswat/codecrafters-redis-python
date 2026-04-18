@@ -242,6 +242,9 @@ def cmd_info(connection, args, ctx):
 
 
 def cmd_replconf(connection, args, ctx):
+    if args[1] == "GETACK":
+        print(ctx.master_repl_offset)
+        return connection.sendall(encode(["REPLCONF", "ACK", str(0)], BARR))
     connection.sendall(encode("OK", SSTR))
 
 
