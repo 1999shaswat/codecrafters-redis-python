@@ -54,12 +54,16 @@ def handle_connection(connection, ctx):
             if not parsed:
                 continue
             command = parsed[0].upper()
-
+            is_getack = (
+                command == "REPLCONF"
+                and len(parsed) > 1
+                and parsed[1].upper() == "GETACK"
+            )
             # Dont send response (to master) on write commands
             if (
                 ctx.role == "slave"
                 and clientConnection is ctx.master_sock
-                and command in WRITE_CMDS
+                and not is_getack
             ):
                 connection = mockSlaveConnection
             else:
