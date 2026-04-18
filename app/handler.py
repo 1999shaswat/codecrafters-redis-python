@@ -123,6 +123,8 @@ def handle_connection(connection, ctx):
                 handler = COMMAND_HANDLERS.get(command)
                 if handler:
                     handler(connection, parsed, ctx)
+                    if ctx.role == "slave" and clientConnection is ctx.master_sock:
+                        ctx.master_repl_offset += len(encode(parsed, BARR))
                 else:
                     connection.sendall(encode("unknown command", ESTR))
 
@@ -132,8 +134,7 @@ def handle_connection(connection, ctx):
                 for slave in ctx.slaves:
                     slave.sendall(data)
 
-            if ctx.role == "slave" and clientConnection is ctx.master_sock:
-                ctx.master_repl_offset += len(encode(parsed, BARR))
+            
 
             # print(ctx.role, ctx.store)
 
