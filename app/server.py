@@ -93,6 +93,5 @@ def initalize_slave(ctx):
     )
     _response = ctx.master_sock.recv(1024)
     rdb = ctx.master_sock.recv(1024)
-    ctx.master_replica_offset = 0
-    print("running", ctx.master_replica_offset)
+    ctx.master_repl_offset = 0
     handle_connection(ctx.master_sock, ctx)
