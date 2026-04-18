@@ -125,12 +125,16 @@ def handle_connection(connection, ctx):
                 else:
                     connection.sendall(encode("unknown command", ESTR))
 
+            if ctx.role == "slave" and clientConnection is ctx.master_sock:
+                ctx.master_repl_offset += len(data)
+
             if ctx.role == "master" and command in WRITE_CMDS:
-                print("sent to all slaves")
+                # print("sent to all slaves")
+                ctx.master_repl_offset += len(data)
                 for slave in ctx.slaves:
                     slave.sendall(data)
 
-            print(ctx.role, ctx.store)
+            # print(ctx.role, ctx.store)
 
     clientConnection.close()
 
