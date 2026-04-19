@@ -3,7 +3,7 @@ import socket
 import threading
 import secrets
 
-from .utils import recv_until_crlf
+from app.utils import recv_until_crlf
 
 from .resp import BARR, encode
 
@@ -30,6 +30,7 @@ class Context:
         self.master_replid = "?"
         self.master_repl_offset = -1
         self.slaves = []
+        self.slave_addr = {}
 
 
 def run():

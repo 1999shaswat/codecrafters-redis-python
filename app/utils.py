@@ -7,8 +7,7 @@ import sys
 from .resp import BARR, ESTR, encode, parse
 
 
-def get_slave_status(slave_sock, offset, timeout):
-    addr = slave_sock.getpeername()
+def get_slave_status(addr, offset, timeout):
     slave = socket.create_connection(addr)
     slave.settimeout(timeout)
     try:
