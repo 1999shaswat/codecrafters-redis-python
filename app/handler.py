@@ -72,7 +72,6 @@ def handle_connection(connection, ctx):
                     continue
 
                 handler = COMMAND_HANDLERS.get(command)
-                print(command)
                 if handler:
                     handler(connection, parsed, ctx)
                 else:
