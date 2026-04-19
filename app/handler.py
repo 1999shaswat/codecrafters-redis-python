@@ -86,11 +86,20 @@ def handle_connection(connection, ctx):
     clientConnection.close()
 
 
-def handle_master_connection(ctx):
+def handle_master_connection(ctx, initial_data=b""):
     """Read commands from a master as slave."""
     mockSlaveConnection = MockSlaveConnection()
+    pending = initial_data
 
-    while data := ctx.master_sock.recv(1024):
+    while True:
+        if pending:
+            data = pending
+            pending = b""
+        else:
+            data = ctx.master_sock.recv(1024)
+            if not data:
+                break
+
         parsed_list = parse(data)
         if not parsed_list:
             continue

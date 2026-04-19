@@ -6,6 +6,17 @@ import sys
 from .resp import ESTR, encode
 
 
+def recv_until_crlf(sock, buf):
+    """Read from sock until buf contains \r\n, return (line_with_crlf, remainder)."""
+    while b"\r\n" not in buf:
+        chunk = sock.recv(1024)
+        if not chunk:
+            break
+        buf += chunk
+    idx = buf.index(b"\r\n")
+    return buf[: idx + 2], buf[idx + 2 :]
+
+
 def flatten_entry(entry):
     """Flattens each stream entry"""
     eid, d = entry

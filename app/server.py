@@ -3,6 +3,8 @@ import socket
 import threading
 import secrets
 
+from .utils import recv_until_crlf
+
 from .resp import BARR, encode
 
 from .handler import handle_connection, handle_master_connection
@@ -77,21 +79,24 @@ def run():
 
 def initalize_slave(ctx):
     ctx.master_sock = socket.create_connection((ctx.masterHOST, ctx.masterPORT))
-    # master_sock.sendall(b"*1\r\n$4\r\nPING\r\n")
     ctx.master_sock.sendall(encode(["PING"], BARR))
-    _response = ctx.master_sock.recv(1024)
-    # print(response)
+    ctx.master_sock.recv(1024)
+
     ctx.master_sock.sendall(encode(["REPLCONF", "listening-port", str(ctx.port)], BARR))
-    _response = ctx.master_sock.recv(1024)
+    ctx.master_sock.recv(1024)
+
     ctx.master_sock.sendall(encode(["REPLCONF", "capa", "psync2"], BARR))
-    _response = ctx.master_sock.recv(1024)
+    ctx.master_sock.recv(1024)
+
     ctx.master_sock.sendall(
-        encode(
-            ["PSYNC", ctx.master_replid, str(ctx.master_repl_offset)],
-            BARR,
-        )
+        encode(["PSYNC", ctx.master_replid, str(ctx.master_repl_offset)], BARR)
     )
-    _response = ctx.master_sock.recv(1024)
-    rdb = ctx.master_sock.recv(1024)
+    buf = b""
+    _, buf = recv_until_crlf(ctx.master_sock, buf)
+    rdb_header, buf = recv_until_crlf(ctx.master_sock, buf)
+    rdb_len = int(rdb_header[1:-2])
+    while len(buf) < rdb_len:
+        buf += ctx.master_sock.recv(1024)
+    leftover = buf[rdb_len:]
     ctx.master_repl_offset = 0
-    handle_master_connection(ctx)
+    handle_master_connection(ctx, leftover)
