@@ -1,0 +1,95 @@
+Submitting changes (commit: 66f00dc)...
+
+[32m⚡ This is a turbo test run. https://codecrafters.io/turbo[0m
+
+Running tests on your code. Logs should appear shortly...
+
+[33m[compile][0m Moved ./.codecrafters/run.sh → ./your_program.sh
+[33m[compile][0m [32mCompilation successful.[0m
+
+[33m[tester::#NA2] [0m[94mRunning tests for Stage #NA2 (Replication - WAIT with multiple commands)[0m
+[33m[tester::#NA2] [0m[94m$ ./your_program.sh --port 6379[0m
+[33m[tester::#NA2] [0m[94mProceeding to create 4 replicas.[0m
+[33m[tester::#NA2] [setup] [0m[94mCreating 4 replicas:[0m
+[33m[tester::#NA2] [setup] [0m[94m1. replica@6380 (Listening port = 6380)[0m
+[33m[tester::#NA2] [setup] [0m[94m2. replica@6381 (Listening port = 6381)[0m
+[33m[tester::#NA2] [setup] [0m[94m3. replica@6382 (Listening port = 6382)[0m
+[33m[tester::#NA2] [setup] [0m[94m4. replica@6383 (Listening port = 6383)[0m
+[33m[your_program] [0m[0mServer master listening on localhost:6379[0m
+[33m[your_program] [0m[0mNew connection from ('127.0.0.1', 55672)[0m
+[33m[tester::#NA2] [handshake] [replica@6380] [0m[94m$ redis-cli PING[0m
+[33m[tester::#NA2] [handshake] [replica@6380] [0m[92m✔︎ Received "PONG"[0m
+[33m[tester::#NA2] [handshake] [replica@6380] [0m[94m> REPLCONF listening-port 6380[0m
+[33m[tester::#NA2] [handshake] [replica@6380] [0m[92m✔︎ Received "OK"[0m
+[33m[tester::#NA2] [handshake] [replica@6380] [0m[94m> REPLCONF capa psync2[0m
+[33m[tester::#NA2] [handshake] [replica@6380] [0m[92m✔︎ Received "OK"[0m
+[33m[tester::#NA2] [handshake] [replica@6380] [0m[94m> PSYNC ? -1[0m
+[33m[tester::#NA2] [handshake] [replica@6380] [0m[92m✔︎ Received "FULLRESYNC 97de3e77f1704b15a1cb6a7f216fd37894a9a7f3 0"[0m
+[33m[tester::#NA2] [handshake] [replica@6380] [0m[92mReceived RDB file[0m
+[33m[tester::#NA2] [handshake] [replica@6381] [0m[94m$ redis-cli PING[0m
+[33m[your_program] [0m[0mNew connection from ('127.0.0.1', 55678)[0m
+[33m[tester::#NA2] [handshake] [replica@6381] [0m[92m✔︎ Received "PONG"[0m
+[33m[tester::#NA2] [handshake] [replica@6381] [0m[94m> REPLCONF listening-port 6381[0m
+[33m[tester::#NA2] [handshake] [replica@6381] [0m[92m✔︎ Received "OK"[0m
+[33m[tester::#NA2] [handshake] [replica@6381] [0m[94m> REPLCONF capa psync2[0m
+[33m[tester::#NA2] [handshake] [replica@6381] [0m[92m✔︎ Received "OK"[0m
+[33m[tester::#NA2] [handshake] [replica@6381] [0m[94m> PSYNC ? -1[0m
+[33m[tester::#NA2] [handshake] [replica@6381] [0m[92m✔︎ Received "FULLRESYNC 97de3e77f1704b15a1cb6a7f216fd37894a9a7f3 0"[0m
+[33m[tester::#NA2] [handshake] [replica@6381] [0m[92mReceived RDB file[0m
+[33m[your_program] [0m[0mNew connection from ('127.0.0.1', 55686)[0m
+[33m[tester::#NA2] [handshake] [replica@6382] [0m[94m$ redis-cli PING[0m
+[33m[tester::#NA2] [handshake] [replica@6382] [0m[92m✔︎ Received "PONG"[0m
+[33m[tester::#NA2] [handshake] [replica@6382] [0m[94m> REPLCONF listening-port 6382[0m
+[33m[tester::#NA2] [handshake] [replica@6382] [0m[92m✔︎ Received "OK"[0m
+[33m[tester::#NA2] [handshake] [replica@6382] [0m[94m> REPLCONF capa psync2[0m
+[33m[tester::#NA2] [handshake] [replica@6382] [0m[92m✔︎ Received "OK"[0m
+[33m[tester::#NA2] [handshake] [replica@6382] [0m[94m> PSYNC ? -1[0m
+[33m[tester::#NA2] [handshake] [replica@6382] [0m[92m✔︎ Received "FULLRESYNC 97de3e77f1704b15a1cb6a7f216fd37894a9a7f3 0"[0m
+[33m[tester::#NA2] [handshake] [replica@6382] [0m[92mReceived RDB file[0m
+[33m[tester::#NA2] [handshake] [replica@6383] [0m[94m$ redis-cli PING[0m
+[33m[your_program] [0m[0mNew connection from ('127.0.0.1', 55694)[0m
+[33m[tester::#NA2] [handshake] [replica@6383] [0m[92m✔︎ Received "PONG"[0m
+[33m[tester::#NA2] [handshake] [replica@6383] [0m[94m> REPLCONF listening-port 6383[0m
+[33m[tester::#NA2] [handshake] [replica@6383] [0m[92m✔︎ Received "OK"[0m
+[33m[tester::#NA2] [handshake] [replica@6383] [0m[94m> REPLCONF capa psync2[0m
+[33m[tester::#NA2] [handshake] [replica@6383] [0m[92m✔︎ Received "OK"[0m
+[33m[tester::#NA2] [handshake] [replica@6383] [0m[94m> PSYNC ? -1[0m
+[33m[tester::#NA2] [handshake] [replica@6383] [0m[92m✔︎ Received "FULLRESYNC 97de3e77f1704b15a1cb6a7f216fd37894a9a7f3 0"[0m
+[33m[tester::#NA2] [handshake] [replica@6383] [0m[92mReceived RDB file[0m
+[33m[tester::#NA2] [test] [client] [0m[94m$ redis-cli SET foo 123[0m
+[33m[your_program] [0m[0mNew connection from ('127.0.0.1', 55710)[0m
+[33m[tester::#NA2] [test] [client] [0m[92m✔︎ Received "OK"[0m
+[33m[tester::#NA2] [test] [client] [0m[94m> WAIT 1 500[0m
+[33m[tester::#NA2] [test] [0m[94mTesting Replica: replica@6380[0m
+[33m[tester::#NA2] [test] [replica@6380] [0m[94mExpecting "SET foo 123" to be propagated[0m
+[33m[tester::#NA2] [test] [replica@6380] [0m[92m✔︎ Received ["SET", "foo", "123"][0m
+[33m[tester::#NA2] [test] [replica@6380] [0m[94mExpecting "REPLCONF GETACK *" from Master[0m
+[33m[tester::#NA2] [test] [replica@6380] [0m[92m✔︎ Received ["REPLCONF", "GETACK", "*"][0m
+[33m[tester::#NA2] [test] [replica@6380] [0m[94m> REPLCONF ACK 31[0m
+[33m[tester::#NA2] [test] [0m[94mTesting Replica: replica@6381[0m
+[33m[tester::#NA2] [test] [replica@6381] [0m[94mExpecting "SET foo 123" to be propagated[0m
+[33m[tester::#NA2] [test] [replica@6381] [0m[92m✔︎ Received ["SET", "foo", "123"][0m
+[33m[tester::#NA2] [test] [replica@6381] [0m[94mExpecting "REPLCONF GETACK *" from Master[0m
+[33m[tester::#NA2] [test] [replica@6381] [0m[92m✔︎ Received ["REPLCONF", "GETACK", "*"][0m
+[33m[tester::#NA2] [test] [0m[94mTesting Replica: replica@6382[0m
+[33m[tester::#NA2] [test] [replica@6382] [0m[94mExpecting "SET foo 123" to be propagated[0m
+[33m[tester::#NA2] [test] [replica@6382] [0m[92m✔︎ Received ["SET", "foo", "123"][0m
+[33m[tester::#NA2] [test] [replica@6382] [0m[94mExpecting "REPLCONF GETACK *" from Master[0m
+[33m[tester::#NA2] [test] [replica@6382] [0m[92m✔︎ Received ["REPLCONF", "GETACK", "*"][0m
+[33m[tester::#NA2] [test] [0m[94mTesting Replica: replica@6383[0m
+[33m[tester::#NA2] [test] [replica@6383] [0m[94mExpecting "SET foo 123" to be propagated[0m
+[33m[tester::#NA2] [test] [replica@6383] [0m[92m✔︎ Received ["SET", "foo", "123"][0m
+[33m[tester::#NA2] [test] [replica@6383] [0m[94mExpecting "REPLCONF GETACK *" from Master[0m
+[33m[tester::#NA2] [test] [replica@6383] [0m[92m✔︎ Received ["REPLCONF", "GETACK", "*"][0m
+[33m[tester::#NA2] [test] [0m[92mPassed first WAIT test.[0m
+[33m[tester::#NA2] [test] [client] [0m[94m> SET baz 789[0m
+[33m[tester::#NA2] [test] [client] [0m[92m✔︎ Received "OK"[0m
+[33m[tester::#NA2] [test] [client] [0m[94m> WAIT 3 2000[0m
+[33m[tester::#NA2] [test] [0m[94mTesting Replica: replica@6380[0m
+[33m[tester::#NA2] [test] [replica@6380] [0m[94mExpecting "SET baz 789" to be propagated[0m
+[33m[tester::#NA2] [0m[91mExpected array, found simple string[0m
+[33m[tester::#NA2] [0m[91mTest failed[0m
+[33m[your_program] [0m[0mException in thread [0m
+
+View our article on debugging test failures: https://codecrafters.io/debug
+

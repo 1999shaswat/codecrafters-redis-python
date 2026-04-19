@@ -267,8 +267,9 @@ def cmd_wait(connection, args, ctx):
 
     count = 0
     deadline = time.time() + timeout
-    for slave in ctx.slaves:
-        slave.sendall(encode(["REPLCONF", "GETACK", "*"], BARR))
+    with ctx.lock:
+        for slave in ctx.slaves:
+            slave.sendall(encode(["REPLCONF", "GETACK", "*"], BARR))
     while time.time() < deadline:
         count = len(
             [
