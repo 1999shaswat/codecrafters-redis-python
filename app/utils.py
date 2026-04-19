@@ -1,9 +1,27 @@
 from itertools import islice
 from math import floor, ceil
+import socket
 import time
 import sys
 
-from .resp import ESTR, encode
+from .resp import BARR, ESTR, encode, parse
+
+
+def get_slave_status(slave, offset, timeout):
+    slave.settimeout(timeout)
+    try:
+        slave.sendall(encode(["REPLCONF", "GETACK", "*"], BARR))
+        data = slave.recv(1024)
+        parsed_list = parse(data)
+        if not parsed_list:
+            return 0
+        for parsed, _ in parsed_list:
+            if parsed[0].upper() == "REPLCONF" and parsed[1].upper() == "ACK":
+                return 1 if int(parsed[2]) >= offset else 0
+    except socket.timeout:
+        return 0
+    finally:
+        slave.settimeout(None)
 
 
 def recv_until_crlf(sock, buf):

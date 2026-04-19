@@ -1,5 +1,7 @@
+import concurrent
 import threading
 from collections import deque
+import concurrent.futures
 
 from .resp import BARR, BSTR, ESTR, INTR, SSTR, encode, rdb_encode
 from .utils import (
@@ -8,6 +10,7 @@ from .utils import (
     bsearch_upper,
     delete_key,
     flatten_entry,
+    get_slave_status,
     safe_convert,
     slice_deque,
     is_valid,
@@ -258,8 +261,30 @@ def cmd_psync(connection, args, ctx):
 
 
 def cmd_wait(connection, args, ctx):
-    num_replica, time = int(args[1]), int(args[2])
-    connection.sendall(encode(len(ctx.slaves), INTR))
+    reqd_replicas, timeout = int(args[1]), int(args[2]) / 1000
+    if len(ctx.slaves) == 0 or ctx.master_repl_offset == 0:
+        return connection.sendall(encode(len(ctx.slaves), INTR))
+
+    curr = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_tasks = [
+            executor.submit(get_slave_status, slave, ctx.master_repl_offset, timeout)
+            for slave in ctx.slaves
+        ]
+        try:
+            for future in concurrent.futures.as_completed(
+                future_tasks, timeout=timeout
+            ):
+                if task_res := future.result():
+                    curr += task_res
+                if curr >= reqd_replicas:
+                    return connection.sendall(encode(curr, INTR))
+        except TimeoutError:
+            for f in future_tasks:
+                if not f.done():
+                    f.cancel()
+
+    return connection.sendall(encode(curr, INTR))
 
 
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
