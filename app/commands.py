@@ -249,9 +249,7 @@ def cmd_replconf(connection, args, ctx):
         return connection.sendall(
             encode(["REPLCONF", "ACK", str(ctx.master_repl_offset)], BARR)
         )
-    if args[1] == "listening-port":
-        h, p = connection.getpeername()[0], int(args[2])
-        ctx.slave_addr[connection] = (h, p)
+    print(args, "cmds")
     connection.sendall(encode("OK", SSTR))
 
 
@@ -271,9 +269,7 @@ def cmd_wait(connection, args, ctx):
     curr = 0
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future_tasks = [
-            executor.submit(
-                get_slave_status, ctx.slave_addr[slave], ctx.master_repl_offset, timeout
-            )
+            executor.submit(get_slave_status, slave, ctx.master_repl_offset)
             for slave in ctx.slaves
         ]
         try:

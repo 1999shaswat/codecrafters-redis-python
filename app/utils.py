@@ -7,23 +7,15 @@ import sys
 from .resp import BARR, ESTR, encode, parse
 
 
-def get_slave_status(addr, offset, timeout):
-    print(addr)
-    slave = socket.create_connection(addr)
-    slave.settimeout(timeout)
-    try:
-        slave.sendall(encode(["REPLCONF", "GETACK", "*"], BARR))
-        data = slave.recv(1024)
-        parsed_list = parse(data)
-        if not parsed_list:
-            return 0
-        for parsed, _ in parsed_list:
-            if parsed[0].upper() == "REPLCONF" and parsed[1].upper() == "ACK":
-                return 1 if int(parsed[2]) >= offset else 0
-    except socket.timeout:
-        return 0
-    finally:
-        slave.close()
+def get_slave_status(slave, offset):
+    slave.sendall(encode(["REPLCONF", "GETACK", "*"], BARR))
+    # data = slave.recv(1024)
+    # parsed_list = parse(data)
+    # if not parsed_list:
+    #     return 0
+    # for parsed, _ in parsed_list:
+    #     if parsed[0].upper() == "REPLCONF" and parsed[1].upper() == "ACK":
+    #         return 1 if int(parsed[2]) >= offset else 0
 
 
 def recv_until_crlf(sock, buf):
