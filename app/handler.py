@@ -108,6 +108,7 @@ def handle_master_connection(ctx):
             # Dont send response (to master) on write commands
             if not is_getack:
                 connection = mockSlaveConnection
+                ctx.master_repl_offset += consumed_bytes
             else:
                 connection = ctx.master_sock
 
@@ -116,8 +117,6 @@ def handle_master_connection(ctx):
                 handler(connection, parsed, ctx)
             else:
                 connection.sendall(encode("unknown command", ESTR))
-
-            ctx.master_repl_offset += consumed_bytes
 
     ctx.master_sock.close()
 
