@@ -259,8 +259,8 @@ def cmd_psync(connection, args, ctx):
 
 def cmd_wait(connection, args, ctx):
     num_replica, time = args[1], args[2]
-    if num_replica == 0:
-        connection.sendall(encode(0, INTR))
+    connection.sendall(encode(0, INTR))
+    print(num_replica, time)
 
 
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
