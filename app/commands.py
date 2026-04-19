@@ -249,6 +249,7 @@ def cmd_replconf(connection, args, ctx):
         )
     if args[1] == "ACK":
         ctx.slave_offsets[connection] = int(args[2])
+        return
     connection.sendall(encode("OK", SSTR))
 
 
