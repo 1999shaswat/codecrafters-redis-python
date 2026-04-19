@@ -7,7 +7,9 @@ import sys
 from .resp import BARR, ESTR, encode, parse
 
 
-def get_slave_status(slave, offset, timeout):
+def get_slave_status(slave_sock, offset, timeout):
+    addr = slave_sock.getpeername()
+    slave = socket.create_connection(addr)
     slave.settimeout(timeout)
     try:
         slave.sendall(encode(["REPLCONF", "GETACK", "*"], BARR))
@@ -21,7 +23,7 @@ def get_slave_status(slave, offset, timeout):
     except socket.timeout:
         return 0
     finally:
-        slave.settimeout(None)
+        slave.close()
 
 
 def recv_until_crlf(sock, buf):
