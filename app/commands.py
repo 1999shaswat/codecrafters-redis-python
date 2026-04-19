@@ -257,6 +257,12 @@ def cmd_psync(connection, args, ctx):
     connection.sendall(rdb_encode(ctx.store))
 
 
+def cmd_wait(connection, args, ctx):
+    num_replica, time = args[1], args[2]
+    if num_replica == 0:
+        connection.sendall(encode(0, INTR))
+
+
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
 
 # Dispatch table: command name: handler function
@@ -279,4 +285,5 @@ COMMAND_HANDLERS = {
     "INFO": cmd_info,
     "REPLCONF": cmd_replconf,
     "PSYNC": cmd_psync,
+    "WAIT": cmd_wait,
 }
