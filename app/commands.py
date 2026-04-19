@@ -1,7 +1,6 @@
-import concurrent
 import threading
 from collections import deque
-import concurrent.futures
+import time
 
 from .resp import BARR, BSTR, ESTR, INTR, SSTR, encode, rdb_encode
 from .utils import (
@@ -10,7 +9,6 @@ from .utils import (
     bsearch_upper,
     delete_key,
     flatten_entry,
-    get_slave_status,
     safe_convert,
     slice_deque,
     is_valid,
@@ -249,7 +247,8 @@ def cmd_replconf(connection, args, ctx):
         return connection.sendall(
             encode(["REPLCONF", "ACK", str(ctx.master_repl_offset)], BARR)
         )
-    print(args, "cmds")
+    if args[1] == "ACK":
+        ctx.slave_offsets[connection] = int(args[2])
     connection.sendall(encode("OK", SSTR))
 
 
@@ -262,30 +261,27 @@ def cmd_psync(connection, args, ctx):
 
 
 def cmd_wait(connection, args, ctx):
-    reqd_replicas, timeout = int(args[1]), int(args[2]) / 1000
+    reqd, timeout = int(args[1]), int(args[2]) / 1000
     if len(ctx.slaves) == 0 or ctx.master_repl_offset == 0:
         return connection.sendall(encode(len(ctx.slaves), INTR))
 
-    curr = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future_tasks = [
-            executor.submit(get_slave_status, slave, ctx.master_repl_offset)
-            for slave in ctx.slaves
-        ]
-        try:
-            for future in concurrent.futures.as_completed(
-                future_tasks, timeout=timeout
-            ):
-                if task_res := future.result():
-                    curr += task_res
-                if curr >= reqd_replicas:
-                    return connection.sendall(encode(curr, INTR))
-        except TimeoutError:
-            for f in future_tasks:
-                if not f.done():
-                    f.cancel()
+    count = 0
+    deadline = time.time() + timeout
+    for slave in ctx.slaves:
+        slave.sendall(encode(["REPLCONF", "GETACK", "*"], BARR))
+    while time.time() < deadline:
+        count = len(
+            [
+                offset
+                for offset in ctx.slave_offsets.values()
+                if offset >= ctx.master_repl_offset
+            ]
+        )
+        if count >= reqd:
+            return connection.sendall(encode(count, INTR))
+        time.sleep(0.05)
 
-    return connection.sendall(encode(curr, INTR))
+    return connection.sendall(encode(count, INTR))
 
 
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}

@@ -43,7 +43,6 @@ def handle_connection(connection, ctx):
     clientConnection = connection
 
     while data := clientConnection.recv(1024):
-        print(data)
         parsed_list = parse(data)
         if not parsed_list:
             continue

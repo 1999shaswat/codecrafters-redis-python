@@ -30,7 +30,7 @@ class Context:
         self.master_replid = "?"
         self.master_repl_offset = -1
         self.slaves = []
-        self.slave_addr = {}
+        self.slave_offsets = {}
 
 
 def run():
