@@ -78,9 +78,9 @@ def handle_connection(connection, ctx):
 
             if ctx.role == "master" and command in WRITE_CMDS:
                 ctx.master_repl_offset += len(data)
-                with ctx.lock:
-                    for slave in ctx.slaves:
-                        slave.sendall(data)
+                # with ctx.lock:
+                for slave in ctx.slaves:
+                    slave.sendall(data)
 
             # print(ctx.role, ctx.store)
 

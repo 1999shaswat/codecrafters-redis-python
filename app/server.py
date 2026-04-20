@@ -32,6 +32,10 @@ class Context:
         self.slaves = []
         self.slave_offsets = {}
 
+        # RDB
+        self.dir = ""
+        self.dbfilename = ""
+
 
 def run():
     """Start the TCP server and accept client connections."""
@@ -41,8 +45,14 @@ def run():
         "--port", type=int, default=6379, help="Port number (default: 6379)"
     )
     parser.add_argument("--replicaof", help="Start replica server")
+    parser.add_argument("--dir", help="RDB Directory")
+    parser.add_argument("--dbfilename", help="RDB file name")
     args = parser.parse_args()
     ctx.port = args.port
+
+    if args.dir and args.dbfilename:
+        ctx.dir = args.dir
+        ctx.dbfilename = args.dbfilename
 
     if args.replicaof:
         ctx.role = "slave"

@@ -268,9 +268,9 @@ def cmd_wait(connection, args, ctx):
 
     count = 0
     deadline = time.time() + timeout
-    with ctx.lock:
-        for slave in ctx.slaves:
-            slave.sendall(encode(["REPLCONF", "GETACK", "*"], BARR))
+    # with ctx.lock:
+    for slave in ctx.slaves:
+        slave.sendall(encode(["REPLCONF", "GETACK", "*"], BARR))
     while time.time() < deadline:
         count = len(
             [
@@ -284,6 +284,18 @@ def cmd_wait(connection, args, ctx):
         time.sleep(0.05)
 
     return connection.sendall(encode(count, INTR))
+
+
+def cmd_config(connection, args, ctx):
+    if args[1].upper() == "GET":
+        cmd_config_get(connection, args, ctx)
+
+
+def cmd_config_get(connection, args, ctx):
+    if args[2].lower() == "dir":
+        return connection.sendall(encode(["dir", ctx.dir], BARR))
+    if args[2].lower() == "dbfilename":
+        return connection.sendall(encode(["dbfilename", ctx.dbfilename], BARR))
 
 
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
@@ -309,4 +321,5 @@ COMMAND_HANDLERS = {
     "REPLCONF": cmd_replconf,
     "PSYNC": cmd_psync,
     "WAIT": cmd_wait,
+    "CONFIG": cmd_config,
 }
