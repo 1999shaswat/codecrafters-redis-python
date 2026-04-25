@@ -36,6 +36,9 @@ class Context:
         self.dir = ""
         self.dbfilename = ""
 
+        # Channel
+        self.channels = {}
+
 
 def run():
     """Start the TCP server and accept client connections."""

@@ -1,5 +1,5 @@
-from .resp import BARR, ESTR, SSTR, encode, parse
 from .commands import COMMAND_HANDLERS
+from .resp import BARR, ESTR, SSTR, encode, parse
 
 WRITE_CMDS = {
     "SET",
@@ -17,6 +17,7 @@ class ConnState:
         self.multi = False
         self.cmd_q = []
         self.watching = {}
+        self.channels = []
 
 
 class MockConnection:
@@ -29,12 +30,6 @@ class MockConnection:
     def getresponse(self):
         header = f"*{len(self.res)}\r\n".encode()
         return header + b"".join(self.res)
-
-
-# """Used by slave to not send response to master (for write cmds)"""
-class MockSlaveConnection:
-    def sendall(self, _response):
-        pass
 
 
 def handle_connection(connection, ctx):
@@ -53,7 +48,11 @@ def handle_connection(connection, ctx):
                 continue
             command = parsed[0].upper()
 
-            if command in {"MULTI", "EXEC", "DISCARD", "WATCH", "UNWATCH"}:
+            if command in {"SUBSCRIBE", "UNSUBSCRIBE"}:
+                handle_pubsub_cmds(connection, ctx, conn_state, parsed, command)
+            elif conn_state.channels:  # in subscriber mode, block other commands
+                connection.sendall(encode("ERR only pubsub commands allowed", ESTR))
+            elif command in {"MULTI", "EXEC", "DISCARD", "WATCH", "UNWATCH"}:
                 handle_transaction_cmds(connection, ctx, conn_state, parsed, command)
             elif conn_state.multi:
                 # commands other than MULTI EXEC DISCARD, never used in Slaves
@@ -87,57 +86,29 @@ def handle_connection(connection, ctx):
     clientConnection.close()
 
 
-def handle_master_connection(ctx, initial_data=b""):
-    """Read commands from a master as slave."""
-    mockSlaveConnection = MockSlaveConnection()
-    pending = initial_data
-
-    while True:
-        if pending:
-            data = pending
-            pending = b""
-        else:
-            data = ctx.master_sock.recv(1024)
-            if not data:
-                break
-
-        parsed_list = parse(data)
-        if not parsed_list:
-            continue
-
-        for parsed, consumed_bytes in parsed_list:
-            # print(parsed, ctx.role, ctx.master_repl_offset, ctx.store)
-            if not parsed:
-                continue
-            command = parsed[0].upper()
-            is_getack = (
-                command == "REPLCONF"
-                and len(parsed) > 1
-                and parsed[1].upper() == "GETACK"
-            )
-            # Dont send response (to master) on write commands
-            if not is_getack:
-                connection = mockSlaveConnection
-            else:
-                connection = ctx.master_sock
-
-            handler = COMMAND_HANDLERS.get(command)
-            if handler:
-                handler(connection, parsed, ctx)
-            else:
-                connection.sendall(encode("unknown command", ESTR))
-
-            ctx.master_repl_offset += consumed_bytes
-
-    ctx.master_sock.close()
-
-
 def cmd_watch(args, conn_state, ctx):
     keys = args[1:]
     for key in keys:
         conn_state.watching[key] = ctx.store.get(key)
 
 
+# SUSCRIPTIONS CODE HERE
+def cmd_subscribe(connection, args, ctx, conn_state):
+    for channel in args[1:]:
+        subs = ctx.channels.setdefault(channel, [])
+        subs.append(connection)
+        conn_state.channels.append(channel)
+        connection.sendall(
+            encode(["subscribe", channel, len(conn_state.channels)], BARR)
+        )
+
+
+def handle_pubsub_cmds(connection, ctx, conn_state, parsed, command):
+    if command == "SUBSCRIBE":
+        cmd_subscribe(connection, parsed, ctx, conn_state)
+
+
+# TRANSACTION CODE HERE
 def handle_transaction_cmds(connection, ctx, conn_state, parsed, command):
     if command == "MULTI":
         conn_state.multi = True
@@ -187,3 +158,55 @@ def cmd_exec(conn_state, ctx):
             respCollector.sendall(encode("unknown command", ESTR))
     # need to change encode to just to wrap array and not modify response
     return respCollector.getresponse()
+
+
+# SLAVE CODE HERE
+# """Used by slave to not send response to master (for write cmds)"""
+class MockSlaveConnection:
+    def sendall(self, _response):
+        pass
+
+
+def handle_master_connection(ctx, initial_data=b""):
+    """Read commands from a master as slave."""
+    mockSlaveConnection = MockSlaveConnection()
+    pending = initial_data
+
+    while True:
+        if pending:
+            data = pending
+            pending = b""
+        else:
+            data = ctx.master_sock.recv(1024)
+            if not data:
+                break
+
+        parsed_list = parse(data)
+        if not parsed_list:
+            continue
+
+        for parsed, consumed_bytes in parsed_list:
+            # print(parsed, ctx.role, ctx.master_repl_offset, ctx.store)
+            if not parsed:
+                continue
+            command = parsed[0].upper()
+            is_getack = (
+                command == "REPLCONF"
+                and len(parsed) > 1
+                and parsed[1].upper() == "GETACK"
+            )
+            # Dont send response (to master) on write commands
+            if not is_getack:
+                connection = mockSlaveConnection
+            else:
+                connection = ctx.master_sock
+
+            handler = COMMAND_HANDLERS.get(command)
+            if handler:
+                handler(connection, parsed, ctx)
+            else:
+                connection.sendall(encode("unknown command", ESTR))
+
+            ctx.master_repl_offset += consumed_bytes
+
+    ctx.master_sock.close()
