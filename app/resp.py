@@ -1,4 +1,7 @@
+import time
+
 # RESP Data Types
+
 ESTR = 0  # Error Simple String  "-ERR message\r\n"
 SSTR = 1  # Simple String  "+OK\r\n"
 BSTR = 2  # Bulk String    "$6\r\nfoobar\r\n"
@@ -30,6 +33,76 @@ def encode(item, type):
     elif type == INTR:
         return f":{item}\r\n".encode()
     return b"$-1\r\n"
+
+
+def rdb_decode(filename):
+    store = {}
+    try:
+        with open(filename, "rb") as f:
+            # header
+            header = f.read(9)
+            print(f"header: {header.decode()}")
+            while True:
+                opcode = f.read(1)
+                if not opcode or opcode == b"\xff":
+                    break
+                if opcode == b"\xfa":
+                    key = rdb_read_string(f)
+                    val = rdb_read_string(f)
+                    print(f"Metadata: {key} = {val}")
+                elif opcode == b"\xfe":
+                    db_index = rdb_read_length(f)
+                    print(f"Switching to DB: {db_index}")
+                elif opcode == b"\xfb":
+                    table_size = rdb_read_string(f)
+                    exp_table_size = rdb_read_string(f)
+                    print(
+                        f"Table size: {table_size}, Expire Table size: {exp_table_size}"
+                    )
+                else:
+                    expiry = None
+                    value_type = opcode
+                    if opcode == b"\xfc":
+                        expiry = int.from_bytes(f.read(8), "little") / 1000
+                        value_type = f.read(1)
+                    if opcode == b"\xfd":
+                        expiry = int.from_bytes(f.read(4), "little")
+                        value_type = f.read(1)
+
+                    key = rdb_read_string(f)
+                    value = rdb_read_string(f)
+                    if expiry is None or expiry > time.time():
+                        store[key] = value
+    except FileNotFoundError:
+        pass
+    return store
+
+
+def rdb_read_length(f):
+    first_byte = int.from_bytes(f.read(1), "big")
+    encoding_type = (first_byte & 0xC0) >> 6
+    if encoding_type == 0:
+        return first_byte & 0x3F, False
+    elif encoding_type == 1:
+        second_byte = int.from_bytes(f.read(1), "big")
+        return ((first_byte & 0x3F) << 8) | second_byte, False
+    elif encoding_type == 2:
+        return int.from_bytes(f.read(4), "big"), False
+    else:  # encoding_type == 3
+        return first_byte & 0x3F, True
+
+
+def rdb_read_string(f):
+    length, is_special = rdb_read_length(f)
+    if is_special:
+        if length == 0:
+            return str(int.from_bytes(f.read(1), "little"))
+        if length == 1:
+            return str(int.from_bytes(f.read(2), "little"))
+        if length == 2:
+            return str(int.from_bytes(f.read(4), "little"))
+    else:
+        return f.read(length).decode("utf-8")
 
 
 def rdb_encode(store):

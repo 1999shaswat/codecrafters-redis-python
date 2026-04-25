@@ -298,6 +298,11 @@ def cmd_config_get(connection, args, ctx):
         return connection.sendall(encode(["dbfilename", ctx.dbfilename], BARR))
 
 
+def cmd_keys(connection, args, ctx):
+    print(args[1])
+    return connection.sendall(encode(list(ctx.store.keys()), BARR))
+
+
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
 
 # Dispatch table: command name: handler function

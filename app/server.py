@@ -5,7 +5,7 @@ import secrets
 
 from app.utils import recv_until_crlf
 
-from .resp import BARR, encode
+from .resp import BARR, encode, rdb_decode
 
 from .handler import handle_connection, handle_master_connection
 
@@ -53,6 +53,7 @@ def run():
     if args.dir and args.dbfilename:
         ctx.dir = args.dir
         ctx.dbfilename = args.dbfilename
+        ctx.store = rdb_decode(f"{args.dir}/{args.dbfilename}")
 
     if args.replicaof:
         ctx.role = "slave"
