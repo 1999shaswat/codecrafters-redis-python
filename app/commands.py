@@ -303,6 +303,11 @@ def cmd_keys(connection, args, ctx):
     return connection.sendall(encode(list(ctx.store.keys()), BARR))
 
 
+def cmd_subscribe(connection, args, ctx):
+    response = ["SUBSCRIBE", args[1], 1]
+    return connection.sendall(encode(response, BARR))
+
+
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
 
 # Dispatch table: command name: handler function
@@ -328,4 +333,5 @@ COMMAND_HANDLERS = {
     "WAIT": cmd_wait,
     "CONFIG": cmd_config,
     "KEYS": cmd_keys,
+    "SUBSCRIBE": cmd_subscribe,
 }
