@@ -304,7 +304,7 @@ def cmd_keys(connection, args, ctx):
 
 
 def cmd_subscribe(connection, args, ctx):
-    response = ["SUBSCRIBE", args[1], 1]
+    response = ["subscribe", args[1], 1]
     return connection.sendall(encode(response, BARR))
 
 
