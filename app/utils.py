@@ -132,3 +132,8 @@ def slice_deque(d, start, stop):
     result = list(islice(d, 0, stop - start))
     d.rotate(start)
     return result
+    # return str_arr(result)
+
+
+def str_arr(arr):
+    return list(map(str, arr))

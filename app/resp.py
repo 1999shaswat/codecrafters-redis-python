@@ -29,6 +29,8 @@ def encode(item, type):
                 res += encode(each, BARR)
             elif isinstance(each, str):
                 res += encode(each, BSTR)
+            elif isinstance(each, int):
+                res += encode(each, INTR)
         return res
     elif type == INTR:
         return f":{item}\r\n".encode()
