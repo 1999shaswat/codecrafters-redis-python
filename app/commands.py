@@ -327,4 +327,5 @@ COMMAND_HANDLERS = {
     "PSYNC": cmd_psync,
     "WAIT": cmd_wait,
     "CONFIG": cmd_config,
+    "KEYS": cmd_keys,
 }
