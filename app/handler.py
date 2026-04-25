@@ -53,7 +53,6 @@ def handle_connection(connection, ctx):
                 "UNSUBSCRIBE",
                 "PSUBSCRIBE",
                 "PUNSUBSCRIBE",
-                "PING",
                 "QUIT",
             }:
                 handle_pubsub_cmds(connection, ctx, conn_state, parsed, command)
