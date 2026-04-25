@@ -54,8 +54,8 @@ def rdb_decode(filename):
                     db_index = rdb_read_length(f)
                     print(f"Switching to DB: {db_index}")
                 elif opcode == b"\xfb":
-                    table_size = rdb_read_string(f)
-                    exp_table_size = rdb_read_string(f)
+                    table_size = rdb_read_length(f)
+                    exp_table_size = rdb_read_length(f)
                     print(
                         f"Table size: {table_size}, Expire Table size: {exp_table_size}"
                     )
@@ -102,7 +102,7 @@ def rdb_read_string(f):
         if length == 2:
             return str(int.from_bytes(f.read(4), "little"))
     else:
-        return f.read(length).decode("utf-8")
+        return f.read(length).decode("latin-1")
 
 
 def rdb_encode(store):
