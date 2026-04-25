@@ -302,6 +302,13 @@ def cmd_keys(connection, args, ctx):
     return connection.sendall(encode(list(ctx.store.keys()), BARR))
 
 
+def cmd_publish(connection, args, ctx):
+    channel = ctx.channels.setdefault(args[1], [])
+    for conn in channel:
+        conn.sendall(encode(["message", args[1], args[2]], BARR))
+    connection.sendall(encode(len(channel), INTR))
+
+
 TYPES = {"str": "string", "NoneType": "none", "list": "stream"}
 
 # Dispatch table: command name: handler function
@@ -327,4 +334,5 @@ COMMAND_HANDLERS = {
     "WAIT": cmd_wait,
     "CONFIG": cmd_config,
     "KEYS": cmd_keys,
+    "PUBLISH": cmd_publish,
 }
