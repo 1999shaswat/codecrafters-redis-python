@@ -121,7 +121,7 @@ def cmd_unsubscribe(connection, args, ctx, conn_state):
     channel = args[1]
     if channel in conn_state.channels:
         conn_state.channels.remove(channel)
-        ctx.channels[channel].remove(channel)
+        ctx.channels[channel].remove(connection)
     connection.sendall(encode(["unsubscribe", channel, len(conn_state.channels)], BARR))
 
 
