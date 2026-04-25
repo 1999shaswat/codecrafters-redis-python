@@ -54,8 +54,8 @@ def rdb_decode(filename):
                     db_index = rdb_read_length(f)
                     print(f"Switching to DB: {db_index}")
                 elif opcode == b"\xfb":
-                    table_size = rdb_read_length(f)
-                    exp_table_size = rdb_read_length(f)
+                    table_size, _ = rdb_read_length(f)
+                    exp_table_size, _ = rdb_read_length(f)
                     print(
                         f"Table size: {table_size}, Expire Table size: {exp_table_size}"
                     )
