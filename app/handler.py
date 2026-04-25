@@ -48,10 +48,22 @@ def handle_connection(connection, ctx):
                 continue
             command = parsed[0].upper()
 
-            if command in {"SUBSCRIBE", "UNSUBSCRIBE"}:
+            if command in {
+                "SUBSCRIBE",
+                "UNSUBSCRIBE",
+                "PSUBSCRIBE",
+                "PUNSUBSCRIBE",
+                "PING",
+                "QUIT",
+            }:
                 handle_pubsub_cmds(connection, ctx, conn_state, parsed, command)
             elif conn_state.channels:  # in subscriber mode, block other commands
-                connection.sendall(encode("ERR only pubsub commands allowed", ESTR))
+                connection.sendall(
+                    encode(
+                        f"ERR Can't execute '{command}': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context",
+                        ESTR,
+                    )
+                )
             elif command in {"MULTI", "EXEC", "DISCARD", "WATCH", "UNWATCH"}:
                 handle_transaction_cmds(connection, ctx, conn_state, parsed, command)
             elif conn_state.multi:
