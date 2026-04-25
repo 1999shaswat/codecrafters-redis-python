@@ -59,6 +59,7 @@ def handle_connection(connection, ctx):
             elif conn_state.channels:  # in subscriber mode, block other commands
                 if command == "PING":
                     handle_pubsub_cmds(connection, ctx, conn_state, parsed, command)
+                    continue
                 connection.sendall(
                     encode(
                         f"ERR Can't execute '{command}': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context",
@@ -120,7 +121,7 @@ def handle_pubsub_cmds(connection, ctx, conn_state, parsed, command):
     if command == "SUBSCRIBE":
         cmd_subscribe(connection, parsed, ctx, conn_state)
     if command == "PING":
-        connection.sendall(encode(["PONG", ""], BARR))
+        connection.sendall(encode(["pong", ""], BARR))
 
 
 # TRANSACTION CODE HERE
