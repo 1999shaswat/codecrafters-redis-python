@@ -117,9 +117,19 @@ def cmd_subscribe(connection, args, ctx, conn_state):
         )
 
 
+def cmd_unsubscribe(connection, args, ctx, conn_state):
+    channel = args[1]
+    if channel in conn_state.channels:
+        conn_state.channels.remove(channel)
+        ctx.channels[channel].remove(channel)
+    connection.sendall(encode(["unsubscribe", channel, len(conn_state.channels)], BARR))
+
+
 def handle_pubsub_cmds(connection, ctx, conn_state, parsed, command):
     if command == "SUBSCRIBE":
         cmd_subscribe(connection, parsed, ctx, conn_state)
+    if command == "UNSUBSCRIBE":
+        cmd_unsubscribe(connection, parsed, ctx, conn_state)
 
 
 # TRANSACTION CODE HERE
