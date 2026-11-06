@@ -1,0 +1,53 @@
+class SkipNode:
+    def __init__(self, key, score, lvl):
+        self.key = key
+        self.score = score
+        self.forward = [None] * lvl
+        self.span = [0] * lvl
+
+
+class SkipList:
+    def __init__(self):
+        self.maxlvl = 16
+        self.lvl = 1
+        self.size = 0
+        self.head = SkipNode(None, None, self.maxlvl)
+
+    def _less(self, score_a, key_a, score_b, key_b):
+        return (score_a, key_a) < (score_b, key_b)
+
+    def randomLvl(self):
+        lvl = 1
+        while random() < 0.5 and lvl < self.maxlvl:
+            lvl += 1
+        return lvl
+
+    def insert(self, key, score):
+        update = [None] * self.maxlvl
+        rank = [0] * self.maxlvl
+        cur = self.head
+
+        for i in reversed(range(self.lvl)):
+            rank[i] = rank[i + 1] if i < self.lvl - 1 else 0
+            while cur.forward[i] and self._less(
+                cur.forward[i].score, cur.forward[i].key, score, key
+            ):
+                rank[i] += cur.span[i]
+                cur = cur.forward[i]
+            update[i] = cur
+
+        lvl = self.randomLvl()
+        new_node = SkipNode(key, score, lvl)
+
+        if lvl > self.lvl:
+            for i in range(self.lvl, lvl):
+                rank[i] = 0
+                update[i] = self.head
+                self.head.span[i] = self.size
+            self.lvl = lvl
+
+        for i in range(lvl):
+            new_node.forward[i] = update[i].forward[i]
+            update[i].forward[i] = new_node
+            new_node.span[i] = update[i].span[i] - (rank[0] - rank[i])
+            update[i].span[i] = (rank[0] - rank[i]) + 1

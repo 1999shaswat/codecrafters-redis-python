@@ -1,0 +1,14 @@
+https://app.codecrafters.io/courses/redis/stages/ct1?repo=31ee0c8b-6ffe-444e-96ae-53f0ac94f823
+Stage: Sorted Set (in progress)
+Checkpoint: Created Skiplist and helper methods
+Next Steps:
+  SortedSet class (Skiplist+Dict)
+  ZADD, ZRANK, ZRANGE, ZCARD, ZSCORE, ZREM
+
+Feature	Redis Command	Description
+Create / Add members	ZADD	Adds one or more members with a score. Updates score if member exists.
+Retrieve member rank	ZRANK	Returns the index (0-based) of the member, ordered by score.
+List members	ZRANGE	Returns a range of members by index (e.g., ZRANGE key 0 5).
+Count members	ZCARD	Returns the total number of elements in the set.
+Retrieve score	ZSCORE	Returns the score associated with a specific member.
+Remove a member	ZREM	Removes the specified member from the set.
